@@ -22,8 +22,8 @@
     <v-content>
       <v-container fluid>
         <v-row>
-          <modal-wallet :modal-wallets="wallets" :settings="settings" :remote="computedApiRemote"></modal-wallet>
-          <modal-browser :browser-blocks="blocks" :browser-link="browsers"></modal-browser>
+          <modal-wallet :wallets="wallets" :settings="settings" :remote="computedApiRemote"></modal-wallet>
+          <modal-browser :blocks="blocks" :browsers="browsers"></modal-browser>
           <modal-settings :settings="settings"></modal-settings>
 
           <v-dialog v-for="card in computedFilteredCards" :key="card.key" v-model="card.raised" persistent full-page>
@@ -244,39 +244,39 @@
         `
     }
     const ModalWallet = {
-      props: [ 'modalWallets', 'remote', 'settings' ],
+      props: [ 'wallets', 'remote', 'settings' ],
       components: { PrismComponent },
       setup(props) {
         const funcUpdateAccountInfo = async () => {
             console.log(`...updating balance for ${props.settings.walletAddress}`)
-            props.modalWallets.dialog = true
-            props.remote.getAccountBalances(props.settings.walletAddress).then(result => props.modalWallets.accountInfo.balances = result).catch(() => {})
-            props.remote.getAccountPayments(props.settings.walletAddress).then(result => props.modalWallets.accountInfo.payments = result).catch(() => {})
-            props.remote.getAccountOrders(props.settings.walletAddress).then(result => props.modalWallets.accountInfo.orders = result).catch(() => {})
-            props.remote.getAccountTransactions(props.settings.walletAddress).then(result => props.modalWallets.accountInfo.txs = result).catch(() => {})
+            props.wallets.dialog = true
+            props.remote.getAccountBalances(props.settings.walletAddress).then(result => props.wallets.accountInfo.balances = result).catch(() => {})
+            props.remote.getAccountPayments(props.settings.walletAddress).then(result => props.wallets.accountInfo.payments = result).catch(() => {})
+            props.remote.getAccountOrders(props.settings.walletAddress).then(result => props.wallets.accountInfo.orders = result).catch(() => {})
+            props.remote.getAccountTransactions(props.settings.walletAddress).then(result => props.wallets.accountInfo.txs = result).catch(() => {})
           }
         return {
           funcUpdateAccountInfo
         }
       },
       template: `
-          <v-dialog v-model="modalWallets.dialog" persistent full-page>
+          <v-dialog v-model="wallets.dialog" persistent full-page>
             <v-card min-height="500" min-width="400">
               <v-card-title class="headline">账户<v-spacer></v-spacer>
                 <v-btn color="red lighten-1" text @click="funcUpdateAccountInfo"><v-icon fab large>mdi-reload</v-icon></v-btn>
-                <v-btn color="red lighten-1" text @click="modalWallets.dialog=false"><v-icon fab large>mdi-close-circle-outline</v-icon></v-btn>
+                <v-btn color="red lighten-1" text @click="wallets.dialog=false"><v-icon fab large>mdi-close-circle-outline</v-icon></v-btn>
               </v-card-title>
               <v-toolbar dense dark><v-app-bar-nav-icon></v-app-bar-nav-icon></v-toolbar>
               <v-container>
                 <v-row>
-                  <v-tabs v-model="modalWallets.accountTabs">
+                  <v-tabs v-model="wallets.accountTabs">
                     <v-tabs-slider></v-tabs-slider>
-                    <v-tab v-for="(v, name) in modalWallets.accountInfo" :key="name" :href="'#' + name">{{ name }}</v-tab>
+                    <v-tab v-for="(v, name) in wallets.accountInfo" :key="name" :href="'#' + name">{{ name }}</v-tab>
                   </v-tabs>
                 </v-row>
                 <v-row>
-                  <v-tabs-items v-model="modalWallets.accountTabs">
-                      <v-tab-item v-for="(v, name) in modalWallets.accountInfo" :key="name" :value="name">
+                  <v-tabs-items v-model="wallets.accountTabs">
+                      <v-tab-item v-for="(v, name) in wallets.accountInfo" :key="name" :value="name">
                           <prism-component language="javascript">
 {{v}}</prism-component>
                       </v-tab-item>
@@ -288,19 +288,19 @@
         `
     }
     const ModalBrowser = {
-      props: [ 'browserLink', 'browserBlocks' ],
+      props: [ 'browsers', 'blocks' ],
       components: { PrismComponent },
       setup(props) {
         return {
         }
       },
       template: `
-          <v-dialog v-model="browserLink.dialog" persistent full-page>
+          <v-dialog v-model="browsers.dialog" persistent full-page>
             <v-card min-height="500" min-width="400">
-              <v-card-title class="headline">浏览器<v-spacer></v-spacer><v-btn color="red lighten-1" text @click="browserLink.dialog=false"><v-icon fab large>mdi-close-circle-outline</v-icon></v-btn></v-card-title>
+              <v-card-title class="headline">浏览器<v-spacer></v-spacer><v-btn color="red lighten-1" text @click="browsers.dialog=false"><v-icon fab large>mdi-close-circle-outline</v-icon></v-btn></v-card-title>
               <v-toolbar dense dark><v-app-bar-nav-icon></v-app-bar-nav-icon></v-toolbar>
               <v-timeline dense>
-                <v-timeline-item v-for="block of browserBlocks" :key="block.id">
+                <v-timeline-item v-for="block of blocks" :key="block.id">
                     <v-card>
                     <v-card-title class="purple lighten-2" @click="block.blockDetail=!block.blockDetail">
                         <h4 class="white--text font-weight-light">{{ block.id }}</h4>
