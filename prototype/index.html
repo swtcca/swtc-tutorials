@@ -122,7 +122,7 @@
               </v-list-item>
             </v-card>
           </v-col>
-          <v-col v-for="(prepare,key) in prepares" :key="key" cols="12" md="6" lg="4" xl="3">
+          <v-col v-for="(prepare,key) in prepares" v-show="prepare.show" :key="key" cols="12" md="6" lg="4" xl="3">
             <v-card :height="settings.cardHeight" outlined tile :raised="prepare.raised" @click="funcPrepareRaise(key)">
               <v-card-title>
                 <h3>{{ prepare.title }}</h3>
@@ -192,6 +192,8 @@
   <script>
     Vue.use(vueFunctionApi.plugin)
     Vue.use(VueMarkdown)
+    const remoteTypes = 'import { IMarker, IAmount } from "swtc-transaction"\nexport {\n  IMarker,\n  ICurrency,\n  IAmount,\n  ISwtcTxOptions,\n  IPaymentTxOptions,\n  IOfferCreateTxOptions,\n  IOfferCancelTxOptions,\n  IContractInitTxOptions,\n  IContractInvokeTxOptions,\n  IContractDeployTxOptions,\n  IContractCallTxOptions,\n  ISignTxOptions,\n  IAccountSetTxOptions,\n  IRelationTxOptions\n} from "swtc-transaction"\n\nexport interface IRemoteOptions {\n  server?: string\n  server_failover?: string\n  issuer?: string\n  token?: string\n  solidity?: boolean\n  local_sign?: boolean\n  timeout?: number\n  failover?: boolean\n}\n\nexport interface IRequestLedgerOptions {\n  ledger_index?: string | number\n  ledger_hash?: string\n  full?: boolean\n  expand?: boolean\n  transactions?: boolean\n  accounts?: boolean\n}\n\nexport interface IRequestAccountOptions {\n  account: string\n  type?: string\n  ledger?: string\n  ledger_index: string | number\n  ledger_hash: string\n  marker?: IMarker\n  peer?: any\n  limit?: string | number\n}\n\nexport interface IRequestAccountsOptions {\n  ledger_index?: string | number\n  ledger_hash?: string\n  ledger?: string\n  marker?: IMarker\n}\n\nexport interface IRequestTxOptions {\n  hash: string\n}\n\nexport interface IRequestAccountInfoOptions {\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n}\n\nexport interface IRequestAccountTumsOptions {\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n}\n\nexport interface IRequestAccountRelationsOptions {\n  type: string\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n  limit?: string | number\n  marker?: IMarker\n}\n\nexport interface IRequestAccountOffersOptions {\n  type: string\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n  limit?: string | number\n  marker?: IMarker\n}\n\nexport interface IRequestAccountTxOptions {\n  type: string\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n  ledger_min?: number\n  ledger_max?: number\n  limit?: string | number\n  marker?: IMarker\n  offset?: string | number\n  forward?: boolean\n}\n\nexport interface IRequestOrderBookOptions {\n  taker?: string\n  taker_gets?: IAmount\n  taker_pays?: IAmount\n  gets?: IAmount\n  pays?: IAmount\n  limit?: string | number\n  marker?: IMarker\n}\n'.split(/\n\n/).filter( e => /export interface/.test(e))
+    const txTypes = 'export interface IMarker {\n  ledger: string | number\n  seq: string | number\n}\n\nexport interface ICurrency {\n  currency: string\n  issuer: string\n}\n\nexport interface IAmount {\n  currency: string\n  issuer: string\n  value: number\n}\n\nexport interface ISwtcTxOptions {\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IPaymentTxOptions {\n  amount: IAmount\n  source?: string\n  from?: string\n  account?: string\n  destination?: string\n  to?: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IOfferCreateTxOptions {\n  type: string\n  source?: string\n  from?: string\n  account?: string\n  gets?: IAmount\n  pays?: IAmount\n  taker_gets?: IAmount\n  taker_pays?: IAmount\n  platform?: any\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IOfferCancelTxOptions {\n  sequence: number\n  source?: string\n  from?: string\n  account?: string\n  memo?: string\n  secret?: string\n}\n\nexport interface IContractInitTxOptions {\n  amount: number\n  account: string\n  abi: any[]\n  payload: string\n  params?: string[]\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IContractInvokeTxOptions {\n  amount: number\n  account: string\n  destination: string\n  abi: any[]\n  func: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IContractDeployTxOptions {\n  amount: IAmount\n  account: string\n  payload: string\n  params?: string[]\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IContractCallTxOptions {\n  amount: IAmount\n  account: string\n  destination: string\n  params?: string[]\n  func?: string\n  foo?: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface ISignTxOptions {\n  blob: string\n}\n\nexport interface IAccountSetTxOptions {\n  type: string\n  source?: string\n  from?: string\n  account?: string\n  set?: string | number\n  set_flag?: string | number\n  clear?: string | number\n  clear_flag?: string | number\n  delegate_key?: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IRelationTxOptions {\n  type: string\n  source?: string\n  from?: string\n  account?: string\n  target: string\n  limit: IAmount\n  quality_out: any\n  quality_in: any\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n'.split(/\n\n/).filter( e => /export interface/.test(e))
     const Remote = swtc_api.Remote
     const Wallet = Remote.Wallet
 
@@ -418,6 +420,20 @@ ${string}
             remote.getAccountOrders(settings.value.walletAddress).then(result => wallets.value.accountInfo.orders = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
             remote.getAccountTransactions(settings.value.walletAddress).then(result => wallets.value.accountInfo.txs = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
           }
+        vueFunctionApi.watch(activeLabels, (value, oldValue) => {
+            console.log(value)
+              computedPrepareKeys.value.forEach(key => {
+                let prepare = prepares.value[key]
+                console.log("got prepare " + prepare.key)
+                prepare.show = false
+                value.forEach(label_index => {
+                  let label = labels.value[label_index]
+                  if (prepare.labels.indexOf(label) !== -1) {
+                    prepare.show = true
+                  }
+                })
+              })
+          }, {lazy: true})
         vueFunctionApi.watch(() => settings.value.walletSecret, (value, oldValue) => { if (Wallet.isValidSecret(value)) { localStorage.walletSecret = value; settings.value.walletAddress = Wallet.fromSecret(value).address; localStorage.walletAddress = settings.value.walletAddress }}, {lazy: true})
         vueFunctionApi.watch(() => settings.value.testChain, (value, oldValue) => {
             console.log(`detected change from ${oldValue} to ${value}` )
@@ -428,6 +444,8 @@ ${string}
         const computedCardKeys = vueFunctionApi.computed(() => Object.keys(cards.value))
         vueFunctionApi.onCreated(async () => {
             console.log("...vue created")
+            console.log(remoteTypes)
+            console.log(txTypes)
             if (!settings.value.walletSecret || !Wallet.isValidSecret(settings.value.walletSecret)) {
               // generate a wallet
               let wallet = Wallet.generate()
@@ -531,7 +549,6 @@ ${string}
               if (key.match(/offer/i)) {
                 card.labels.push('买卖')
               }
-              console.log(card.key)
               card.code = `
 // node.js 环境需要导入库 swtc_lib = require("swtc-lib")
 
@@ -570,6 +587,8 @@ remote.connectPromise()
         const prepares = vueFunctionApi.value({
           swtclib: {
             key: 'swtclib',
+            show: true,
+            labels: ["基础"],
             title: '包装类 - Remote',
             content: 'swtc_lib.Remote',
             lists: [
@@ -580,6 +599,8 @@ remote.connectPromise()
           },
           request: {
             key: 'request',
+            show: false,
+            labels: ["基础"],
             title: '包装类 - Request [查询]',
             content: 'swtc_lib.Request',
             lists: [
@@ -589,6 +610,8 @@ remote.connectPromise()
           },
           tx: {
             key: 'tx',
+            show: false,
+            labels: ["基础"],
             title: '包装类 - Transaction [写入]',
             content: 'swtc_lib.Transaction',
             lists: [
@@ -598,6 +621,8 @@ remote.connectPromise()
           },
           wallet: {
             key: 'wallet',
+            show: false,
+            labels: ["基础"],
             title: '包装类 - Wallet [账户]',
             content: 'swtc_lib.Wallet',
             lists: [
@@ -843,7 +868,7 @@ remote.connectPromise()
             labels: ["进阶"],
             raised: false
           },
-         // setSequecePromise: {
+         // _setSequecePromise: {
          //   key: 'setSequencePromise',
          //   title: '设置交易序号',
          //   content: '设置交易序号',
@@ -851,7 +876,7 @@ remote.connectPromise()
          //   params: '[sequence]',
          //   showParams: false,
          //   returns: 'tx',
-         //   labels: ["辅助","进阶"],
+         //   labels: ["进阶"],
          //   raised: false
          // },
          // signPromise: {
@@ -862,7 +887,7 @@ remote.connectPromise()
          //   params: 'secret [memo [sequence]]',
          //   showParams: false,
          //   returns: 'blob',
-         //   labels: ["辅助","进阶"],
+         //   labels: ["进阶"],
          //   raised: false
          // },
           buildSignTx: {
