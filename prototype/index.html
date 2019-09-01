@@ -14,6 +14,17 @@
     <v-app-bar app dark>
       <v-toolbar-title>{{ settings.toolbarTitle }}</v-toolbar-title>
       <v-spacer></v-spacer>
+        <div class="text-center">
+          <v-menu offset-y>
+            <template v-slot:activator="{ on }"> <v-btn color="primary" dark v-on="on">资 源 连 接</v-btn> </template>
+            <v-list>
+              <v-list-item v-for="(item, index) in reosurceLinks" :key="index" @click="funcOpenUrl(item.url)">
+                <v-list-item-title>{{ item.name }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
+      <v-spacer></v-spacer>
       <v-btn color="white" @click="funcUpdateAccountInfo" text rounded class="my-2">{{ wallets.name }}</v-btn>
       <v-btn color="white" @click="browsers.dialog=!browsers.dialog" text rounded class="my-2">{{ browsers.name }}</v-btn>
       <v-btn color="white" @click="settings.dialog=!settings.dialog" text rounded class="my-2">设置</v-btn>
@@ -255,7 +266,7 @@
                   <v-col cols="12" sm="6" md="4">测试链</v-col>
                   <v-col cols="12" sm="6" md="8"  class="pb-4"><v-switch v-model="settings.testChain"></v-switch></v-col>
                   <v-col cols="12" sm="6" md="4">节点服务器</v-col>
-                  <v-col cols="12" sm="6" md="8" class="pb-4"><v-text-field label="libServer" v-model="settings.libServer" :readonly="settings.testChain"></v-text-field></v-col>
+                  <v-col cols="12" sm="6" md="8" class="pb-4"><v-text-field label="libServer" v-model="settings.libServer" readonly></v-text-field></v-col>
                   <v-col cols="12" sm="6" md="4">api服务器</v-col>
                   <v-col cols="12" sm="6" md="8" class="pb-4"><v-text-field label="apiServer" v-model="settings.apiServer" readonly></v-text-field></v-col>
                   <v-col cols="12" sm="6" md="4">测试银关</v-col>
@@ -368,6 +379,14 @@
         const started = vueFunctionApi.value(false)
         const codeReadonly = vueFunctionApi.value(true)
         const interval = vueFunctionApi.value(null)
+        const reosurceLinks = [
+          {name: 'swtdocs.org', url: 'http://www.swtcdocs.org'},
+          {name: 'swtclib库源码', url: 'https://github.com/swtcca/swtclib'},
+          {name: 'swtclib库文档', url: 'http://swtc.daszichan.com'},
+          {name: 'jingtunlib库文档', url: 'http://developer.jingtum.com'},
+          {name: 'swtclib实例', url: 'http://swtc.daszichan.com/docs/examples'},
+          {name: 'javascript教程', url: 'https://www.liaoxuefeng.com/wiki/1022910821149312'}
+        ]
         const settings = vueFunctionApi.value({
             dialog: false,
             toolbarTitle: 'SWTCLIB 教程',
@@ -510,8 +529,8 @@ ${string}
               settings.value.libServer = 'ws://ts5.jingtum.com:5020'
               settings.value.apiServer = 'https://tapi.jingtum.com'
             } else {
-              settings.value.libServer = 'ws://ws.swtclib.ca:5020'
-              settings.value.apiServer = 'https://api.jingtum.com'
+              settings.value.libServer = ''
+              settings.value.apiServer = ''
             }
             funcClearInterval()
             started.value = false
@@ -548,15 +567,15 @@ ${string}
             funcSetInterval()
           })
         const computedRemoteOption = vueFunctionApi.computed(() => {
-            return settings.value.testChain ? {server: 'ws://ts5.jingtum.com:5020', issuer: settings.value.testIssuer} : {}
+            return settings.value.testChain ? {server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.value.testIssuer}'`} : {}
           })
         const computedApiRemoteOption = vueFunctionApi.computed(() => {
-            return settings.value.testChain ? {server: 'https://tapi.jingtum.com', issuer: settings.value.testIssuer} : {}
+            return settings.value.testChain ? {server: 'https://tapi.jingtum.com', issuer: `'${settings.value.testIssuer}'`} : {}
           })
         const computedRemoteString = vueFunctionApi.computed(() => {
             let r
             if (settings.value.testChain) {
-              r = `new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: ${settings.value.testIssuer}})`
+              r = `new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: '${settings.value.testIssuer}'})`
             } else if (settings.value.libServer) {
               r = `new (swtc_lib.Remote)({server: ${settings.value.libServer}})`
             } else {
@@ -567,7 +586,7 @@ ${string}
         const computedRemote = vueFunctionApi.computed(() => {
             let r
             if (settings.value.testChain) {
-              r = new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: settings.value.testIssuer})
+              r = new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.value.testIssuer}'`})
             } else if (settings.value.libServer) {
               r = new (swtc_lib.Remote)({server: settings.value.libServer})
             } else {
@@ -578,9 +597,9 @@ ${string}
         const computedApiRemote = vueFunctionApi.computed(() => {
             let r
             if (settings.value.testChain) {
-              r = new (swtc_api.Remote)({server: 'https://tapi.jingtum.com', issuer: settings.value.testIssuer})
+              r = new (swtc_api.Remote)({server: 'https://tapi.jingtum.com', issuer: `'${settings.value.testIssuer}'`})
             } else if (settings.value.apiServer) {
-              r = new (swtc_api.Remote)({server: settings.value.apiServer})
+              r = new (swtc_api.Remote)({server: `'${settings.value.apiServer}'`})
             } else {
               r = new (swtc_api.Remote)()
             }
@@ -602,6 +621,9 @@ ${string}
           } catch (error) {
             console.log(error)
           }
+        }
+        const funcOpenUrl = (url) => {
+          window.open(url, '_blank')
         }
         const funcInitCardsCodes = () => {
             computedCardKeys.value.forEach((key) => {
@@ -1240,6 +1262,7 @@ remote.connectPromise()
           prepareBlocks,
           prepareWeb,
           prepares,
+          reosurceLinks,
           computedPrepareKeys,
           computedCardKeys,
           computedRemoteOption,
@@ -1257,6 +1280,7 @@ remote.connectPromise()
           funcSetInterval,
           funcClearInterval,
           funcUpdateAccountInfo,
+          funcOpenUrl,
           funcCardParamInterface
         }
       }
