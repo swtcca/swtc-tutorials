@@ -18,7 +18,7 @@
           <v-menu offset-y>
             <template v-slot:activator="{ on }"> <v-btn color="primary" dark v-on="on">资 源 连 接</v-btn> </template>
             <v-list>
-              <v-list-item v-for="(item, index) in reosurceLinks" :key="index" @click="funcOpenUrl(item.url)">
+              <v-list-item v-for="(item, index) in resourceLinks" :key="index" @click="funcOpenUrl(item.url)">
                 <v-list-item-title>{{ item.name }}</v-list-item-title>
               </v-list-item>
             </v-list>
@@ -59,18 +59,12 @@
                         <v-col cols="12" class="text-center" v-show="card.showParams">
                           <prism-component language="javascript">{{ card.interface }}</prism-component>
                         </v-col>
-                        <v-col cols="12" md="6">
-                          <v-row class="mx-2" v-show="codeReadonly" @click="codeReadonly=!codeReadonly">
-                            <prism-component language="javascript">{{ card.code_pre }}</prism-component>
-                          </v-row>
+                        <v-col cols="12" md="6" class="d-flex flex-column">
                           <v-row class="mx-2" v-show="!codeReadonly" @click="codeReadonly=!codeReadonly">
                             <v-textarea outlined auto-grow :name="card.key" label="辅助" v-model="card.code_pre" class="mt-2" :readonly="codeReadonly" @click="codeReadonly=!codeReadonly"></v-textarea>
                           </v-row>
-                          <v-row class="mx-2 mt-4" @click="codeReadonly=true">
+                          <v-row class="mx-2 mt-4 align-content-center" @click="codeReadonly=true">
                             <v-textarea outlined auto-grow :name="card.key" label="修改代码" v-model="card.code"></v-textarea>
-                          </v-row>
-                          <v-row class="mx-2" v-show="codeReadonly" @click="codeReadonly=!codeReadonly">
-                            <prism-component language="javascript">{{ card.code_post }}</prism-component>
                           </v-row>
                           <v-row class="mx-2" v-show="!codeReadonly" @click="codeReadonly=!codeReadonly">
                             <v-textarea outlined auto-grow :name="card.key" label="辅助" v-model="card.code_post" class="mt-2" :readonly="codeReadonly" @click="codeReadonly=!codeReadonly"></v-textarea>
@@ -86,6 +80,7 @@
               </v-container>
               <v-card-actions>
                 <v-spacer></v-spacer>
+                <v-btn color="primary darken-1" fab large @click="codeReadonly=!codeReadonly">辅助</v-btn>
                 <v-btn color="green darken-1" fab large @click="funcCopy(card.code_pre + card.code + card.code_post)">复制</v-btn>
                 <v-btn color="red darken-1" fab large @click="funcEval(card.code_pre + card.code + card.code_post)">运行</v-btn>
               </v-card-actions>
@@ -227,23 +222,30 @@
 
   <script src="https://unpkg.com/prismjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
-  <script src="https://unpkg.com/vue-function-api@2.2.0/dist/vue-function-api.umd.js"></script>
+  <script src="https://unpkg.com/@vue/composition-api/dist/vue-composition-api.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
   <script src="https://unpkg.com/vue-prism-component@1.1.1/dist/vue-prism-component.js"></script>
-  <script src="https://unpkg.com/vue-markdown@2.2.4/dist/vue-markdown.js"></script>
   <script src="https://unpkg.com/swtc-lib"></script>
   <script src="https://unpkg.com/swtc-api"></script>
   <!-- <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> -->
   <script>
-    Vue.use(vueFunctionApi.plugin)
-    Vue.use(VueMarkdown)
+    Vue.use(vueCompositionApi.plugin || vueCompositionApi.default)
     const remoteTypes = 'import { IMarker, IAmount } from "swtc-transaction"\nexport {\n  IMarker,\n  ICurrency,\n  IAmount,\n  ISwtcTxOptions,\n  IPaymentTxOptions,\n  IOfferCreateTxOptions,\n  IOfferCancelTxOptions,\n  IContractInitTxOptions,\n  IContractInvokeTxOptions,\n  IContractDeployTxOptions,\n  IContractCallTxOptions,\n  ISignTxOptions,\n  IAccountSetTxOptions,\n  IRelationTxOptions\n} from "swtc-transaction"\n\nexport interface IRemoteOptions {\n  server?: string\n  server_failover?: string\n  issuer?: string\n  token?: string\n  solidity?: boolean\n  local_sign?: boolean\n  timeout?: number\n  failover?: boolean\n}\n\nexport interface IRequestLedgerOptions {\n  ledger_index?: string | number\n  ledger_hash?: string\n  full?: boolean\n  expand?: boolean\n  transactions?: boolean\n  accounts?: boolean\n}\n\nexport interface IRequestAccountOptions {\n  account: string\n  type?: string\n  ledger?: string\n  ledger_index: string | number\n  ledger_hash: string\n  marker?: IMarker\n  peer?: any\n  limit?: string | number\n}\n\nexport interface IRequestAccountsOptions {\n  ledger_index?: string | number\n  ledger_hash?: string\n  ledger?: string\n  marker?: IMarker\n}\n\nexport interface IRequestTxOptions {\n  hash: string\n}\n\nexport interface IRequestAccountInfoOptions {\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n}\n\nexport interface IRequestAccountTumsOptions {\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n}\n\nexport interface IRequestAccountRelationsOptions {\n  type: string\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n  limit?: string | number\n  marker?: IMarker\n}\n\nexport interface IRequestAccountOffersOptions {\n  type: string\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n  limit?: string | number\n  marker?: IMarker\n}\n\nexport interface IRequestAccountTxOptions {\n  type: string\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n  ledger_min?: number\n  ledger_max?: number\n  limit?: string | number\n  marker?: IMarker\n  offset?: string | number\n  forward?: boolean\n}\n\nexport interface IRequestOrderBookOptions {\n  taker?: string\n  taker_gets?: IAmount\n  taker_pays?: IAmount\n  gets?: IAmount\n  pays?: IAmount\n  limit?: string | number\n  marker?: IMarker\n}\n'.split(/\n\n/).filter( e => /export interface/.test(e))
     const txTypes = 'export interface IMarker {\n  ledger: string | number\n  seq: string | number\n}\n\nexport interface ICurrency {\n  currency: string\n  issuer: string\n}\n\nexport interface IAmount {\n  currency: string\n  issuer: string\n  value: number\n}\n\nexport interface ISwtcTxOptions {\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IPaymentTxOptions {\n  amount: IAmount\n  source?: string\n  from?: string\n  account?: string\n  destination?: string\n  to?: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IOfferCreateTxOptions {\n  type: string\n  source?: string\n  from?: string\n  account?: string\n  gets?: IAmount\n  pays?: IAmount\n  taker_gets?: IAmount\n  taker_pays?: IAmount\n  platform?: any\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IOfferCancelTxOptions {\n  sequence: number\n  source?: string\n  from?: string\n  account?: string\n  memo?: string\n  secret?: string\n}\n\nexport interface IContractInitTxOptions {\n  amount: number\n  account: string\n  abi: any[]\n  payload: string\n  params?: string[]\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IContractInvokeTxOptions {\n  amount: number\n  account: string\n  destination: string\n  abi: any[]\n  func: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IContractDeployTxOptions {\n  amount: IAmount\n  account: string\n  payload: string\n  params?: string[]\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IContractCallTxOptions {\n  amount: IAmount\n  account: string\n  destination: string\n  params?: string[]\n  func?: string\n  foo?: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface ISignTxOptions {\n  blob: string\n}\n\nexport interface IAccountSetTxOptions {\n  type: string\n  source?: string\n  from?: string\n  account?: string\n  set?: string | number\n  set_flag?: string | number\n  clear?: string | number\n  clear_flag?: string | number\n  delegate_key?: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IRelationTxOptions {\n  type: string\n  source?: string\n  from?: string\n  account?: string\n  target: string\n  limit: IAmount\n  quality_out: any\n  quality_in: any\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n'.split(/\n\n/).filter( e => /export interface/.test(e))
     const interfaces = [...remoteTypes, ...txTypes]
     const Wallet = swtc_api.Remote.Wallet
     const sleep = time => new Promise(res => setTimeout(() => res(), time))
 
-    const ModalSettings = {
+    const labels = [ '基础', '常用', '账户', '查询', '写入', '进阶', '辅助', '独有', '关系', '合约', '买卖', '未知' ]
+    const resourceLinks = [
+      {name: 'swtdocs.org', url: 'http://www.swtcdocs.org'},
+      {name: 'swtclib库源码', url: 'https://github.com/swtcca/swtclib'},
+      {name: 'swtclib库文档', url: 'http://swtc.daszichan.com'},
+      {name: 'jingtunlib库文档', url: 'http://developer.jingtum.com'},
+      {name: 'swtclib实例', url: 'http://swtc.daszichan.com/docs/examples'},
+      {name: 'javascript教程', url: 'https://www.liaoxuefeng.com/wiki/1022910821149312'}
+    ]
+    const ModalSettings = vueCompositionApi.createComponent({
       props: [ 'settings' ],
       components: { PrismComponent },
       setup(props) {
@@ -296,8 +298,8 @@
             </v-card>
           </v-dialog>
         `
-    }
-    const ModalWallet = {
+    })
+    const ModalWallet = vueCompositionApi.createComponent({
       props: [ 'wallets', 'remote', 'settings' ],
       components: { PrismComponent },
       setup(props) {
@@ -340,8 +342,8 @@
             </v-card>
           </v-dialog>
         `
-    }
-    const ModalBrowser = {
+    })
+    const ModalBrowser = vueCompositionApi.createComponent({
       props: [ 'browsers', 'blocks' ],
       components: { PrismComponent },
       setup(props) {
@@ -369,25 +371,17 @@
             </v-card>
           </v-dialog>
         `
-    }
+    })
     const vm = new Vue({
       el: '#app',
       vuetify: new Vuetify(),
       components: { PrismComponent, ModalBrowser, ModalWallet, ModalSettings },
       setup() {
-        const ledger = vueFunctionApi.value(0)
-        const started = vueFunctionApi.value(false)
-        const codeReadonly = vueFunctionApi.value(true)
-        const interval = vueFunctionApi.value(null)
-        const reosurceLinks = [
-          {name: 'swtdocs.org', url: 'http://www.swtcdocs.org'},
-          {name: 'swtclib库源码', url: 'https://github.com/swtcca/swtclib'},
-          {name: 'swtclib库文档', url: 'http://swtc.daszichan.com'},
-          {name: 'jingtunlib库文档', url: 'http://developer.jingtum.com'},
-          {name: 'swtclib实例', url: 'http://swtc.daszichan.com/docs/examples'},
-          {name: 'javascript教程', url: 'https://www.liaoxuefeng.com/wiki/1022910821149312'}
-        ]
-        const settings = vueFunctionApi.value({
+        const ledger = vueCompositionApi.ref(0)
+        const started = vueCompositionApi.ref(false)
+        const codeReadonly = vueCompositionApi.ref(true)
+        const interval = vueCompositionApi.ref(null)
+        const settings = vueCompositionApi.reactive({
             dialog: false,
             toolbarTitle: 'SWTCLIB 教程',
             testChain: localStorage.testChain || true,
@@ -401,18 +395,17 @@
             apiServer: localStorage.apiServer || 'https://tapi.jingtum.com',
             testIssuer:localStorage.testIssuer || 'jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS',
           })
-        const labels = vueFunctionApi.value([ '基础', '常用', '账户', '查询', '写入', '进阶', '辅助', '独有', '关系', '合约', '买卖', '未知' ])
-        const activeLabels = vueFunctionApi.value([0])
-        const wallets = vueFunctionApi.value({
+        const activeLabels = vueCompositionApi.ref([0])
+        const wallets = vueCompositionApi.reactive({
             accountInfo: {balances: {loading: true}, payments: {loading: true}, orders: {loading: true}, txs: {loading: true}},
             accountTabs: 'balances',
             id: 'account',
             name: '账户',
             dialog: false
           })
-        const browsers = vueFunctionApi.value({id: 'browser', name: '浏览器', dialog: false})
-        const blocks = vueFunctionApi.value([])
-        const dashboardBlocks = vueFunctionApi.value([])
+        const browsers = vueCompositionApi.ref({id: 'browser', name: '浏览器', dialog: false})
+        const blocks = vueCompositionApi.ref([])
+        const dashboardBlocks = vueCompositionApi.ref([])
         const funcCopy = (string) => {
           navigator.permissions.query({name: "clipboard-write"}).then(result => {
              if (result.state == "granted" || result.state == "prompt") {
@@ -447,7 +440,7 @@ ${string}
                       if (!blocks.value.find(e => e.id === block.ledger_index)) {
                         blocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
                         dashboardBlocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
-                        blocks.value.splice(settings.value.maxBlocks)
+                        blocks.value.splice(settings.maxBlocks)
                         dashboardBlocks.value.splice(3)
                       }
                     } else {
@@ -460,7 +453,7 @@ ${string}
                 } else {
                   console.log('not started yet')
                 }
-              }, settings.value.updateInterval * 1000)
+              }, settings.updateInterval * 1000)
         }
         const funcClearInterval = () => {
           console.log("...clearing interval")
@@ -498,39 +491,39 @@ ${string}
           }
         // const funcMarked = (text) => marked(text)
         const funcUpdateAccountInfo = async () => {
-            wallets.value.dialog = true
+            wallets.dialog = true
             let remote = computedApiRemote.value
-            remote.getAccountBalances(settings.value.walletAddress).then(result => wallets.value.accountInfo.balances = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
-            remote.getAccountPayments(settings.value.walletAddress).then(result => wallets.value.accountInfo.payments = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
-            remote.getAccountOrders(settings.value.walletAddress).then(result => wallets.value.accountInfo.orders = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
-            remote.getAccountTransactions(settings.value.walletAddress).then(result => wallets.value.accountInfo.txs = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
+            remote.getAccountBalances(settings.walletAddress).then(result => wallets.accountInfo.balances = result).catch(error => wallets.accountInfo.balances = {error: '未激活'})
+            remote.getAccountPayments(settings.walletAddress).then(result => wallets.accountInfo.payments = result).catch(error => wallets.accountInfo.balances = {error: '未激活'})
+            remote.getAccountOrders(settings.walletAddress).then(result => wallets.accountInfo.orders = result).catch(error => wallets.accountInfo.balances = {error: '未激活'})
+            remote.getAccountTransactions(settings.walletAddress).then(result => wallets.accountInfo.txs = result).catch(error => wallets.accountInfo.balances = {error: '未激活'})
           }
-        vueFunctionApi.watch(activeLabels, (value, oldValue) => {
+        vueCompositionApi.watch(activeLabels, (value, oldValue) => {
             computedPrepareKeys.value.forEach(key => {
               let prepare = prepares.value[key]
               prepare.show = false
               value.forEach(label_index => {
-                let label = labels.value[label_index]
+                let label = labels[label_index]
                 if (prepare.labels.indexOf(label) !== -1) {
                   prepare.show = true
                 }
               })
             })
           }, {lazy: true})
-        vueFunctionApi.watch(() => settings.value.walletSecret, (value, oldValue) => { if (Wallet.isValidSecret(value)) { localStorage.walletSecret = value; settings.value.walletAddress = Wallet.fromSecret(value).address; localStorage.walletAddress = settings.value.walletAddress }}, {lazy: true})
-        vueFunctionApi.watch(() => settings.value.updateInterval, async (value, oldValue) => {
+        vueCompositionApi.watch(() => settings.walletSecret, (value, oldValue) => { if (Wallet.isValidSecret(value)) { localStorage.walletSecret = value; settings.walletAddress = Wallet.fromSecret(value).address; localStorage.walletAddress = settings.walletAddress }}, {lazy: true})
+        vueCompositionApi.watch(() => settings.updateInterval, async (value, oldValue) => {
             console.log(`detected change from ${oldValue} to ${value}` )
             funcClearInterval()
             funcSetInterval()
           }, {lazy: true})
-        vueFunctionApi.watch(() => settings.value.testChain, async (value, oldValue) => {
+        vueCompositionApi.watch(() => settings.testChain, async (value, oldValue) => {
             console.log(`detected change from ${oldValue} to ${value}` )
             if (value) {
-              settings.value.libServer = 'ws://ts5.jingtum.com:5020'
-              settings.value.apiServer = 'https://tapi.jingtum.com'
+              settings.libServer = 'ws://ts5.jingtum.com:5020'
+              settings.apiServer = 'https://tapi.jingtum.com'
             } else {
-              settings.value.libServer = ''
-              settings.value.apiServer = ''
+              settings.libServer = ''
+              settings.apiServer = ''
             }
             funcClearInterval()
             started.value = false
@@ -538,68 +531,66 @@ ${string}
             funcSetInterval()
             funcInitCardsCodes()
           }, {lazy: true})
-        const computedPrepareKeys = vueFunctionApi.computed(() => Object.keys(prepares.value))
-        const computedCardKeys = vueFunctionApi.computed(() => Object.keys(cards.value))
-        vueFunctionApi.onCreated(async () => {
+        const computedPrepareKeys = vueCompositionApi.computed(() => Object.keys(prepares.value))
+        const computedCardKeys = vueCompositionApi.computed(() => Object.keys(cards.value))
+        vueCompositionApi.onMounted(async () => {
             console.log("...vue created")
-            if (!settings.value.walletSecret || !Wallet.isValidSecret(settings.value.walletSecret)) {
+            if (!settings.walletSecret || !Wallet.isValidSecret(settings.walletSecret)) {
               // generate a wallet
               let wallet = Wallet.generate()
-              settings.value.walletSecret = wallet.secret
-              settings.value.walletAddress = wallet.address
+              settings.walletSecret = wallet.secret
+              settings.walletAddress = wallet.address
               localStorage.walletSecret = wallet.secret
               localStorage.walletAddress = wallet.address
             }
             let remote = computedApiRemote.value
-            if (Wallet.isValidSecret(settings.value.walletSecret)) {
-              settings.value.walletAddress = Wallet.fromSecret(settings.value.walletSecret).address
-              localStorage.walletAddress = settings.value.walletAddress
+            if (Wallet.isValidSecret(settings.walletSecret)) {
+              settings.walletAddress = Wallet.fromSecret(settings.walletSecret).address
+              localStorage.walletAddress = settings.walletAddress
             } else {
-              settings.value.walletAddress = 'secret incorrect 密钥错误'
-              localStorage.walletAddress = settings.value.walletAddress
+              settings.walletAddress = 'secret incorrect 密钥错误'
+              localStorage.walletAddress = settings.walletAddress
               localStorage.walletSecret = ''
             }
             await funcInitBlocks()
-          })
-        vueFunctionApi.onMounted(() => {
             // console.log("...vue mounted")
             funcInitCards()
             funcSetInterval()
           })
-        const computedRemoteOption = vueFunctionApi.computed(() => {
-            return settings.value.testChain ? {server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.value.testIssuer}'`} : {}
+        const computedRemoteOption = vueCompositionApi.computed(() => {
+            return settings.testChain ? {server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.testIssuer}'`} : {}
           })
-        const computedApiRemoteOption = vueFunctionApi.computed(() => {
-            return settings.value.testChain ? {server: 'https://tapi.jingtum.com', issuer: `'${settings.value.testIssuer}'`} : {}
+        const computedApiRemoteOption = vueCompositionApi.computed(() => {
+            return settings.testChain ? {server: 'https://tapi.jingtum.com', issuer: `'${settings.testIssuer}'`} : {}
           })
-        const computedRemoteString = vueFunctionApi.computed(() => {
+        const computedRemoteString = vueCompositionApi.computed(() => {
             let r
-            if (settings.value.testChain) {
-              r = `new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: '${settings.value.testIssuer}'})`
-            } else if (settings.value.libServer) {
-              r = `new (swtc_lib.Remote)({server: ${settings.value.libServer}})`
+            if (settings.testChain) {
+              r = `new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: '${settings.testIssuer}'})`
+            } else if (settings.libServer) {
+              r = `new (swtc_lib.Remote)({server: ${settings.libServer}})`
             } else {
               r = `new (swtc_lib.Remote)()`
             }
             return r
           })
-        const computedRemote = vueFunctionApi.computed(() => {
+        const computedRemote = vueCompositionApi.computed(() => {
             let r
-            if (settings.value.testChain) {
-              r = new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.value.testIssuer}'`})
-            } else if (settings.value.libServer) {
-              r = new (swtc_lib.Remote)({server: settings.value.libServer})
+            if (settings.testChain) {
+              r = new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.testIssuer}'`})
+            } else if (settings.libServer) {
+              r = new (swtc_lib.Remote)({server: settings.libServer})
             } else {
               r = new (swtc_lib.Remote)()
             }
             return r
           })
-        const computedApiRemote = vueFunctionApi.computed(() => {
+        const computedApiRemote = vueCompositionApi.computed(() => {
             let r
-            if (settings.value.testChain) {
-              r = new (swtc_api.Remote)({server: 'https://tapi.jingtum.com', issuer: `'${settings.value.testIssuer}'`})
-            } else if (settings.value.apiServer) {
-              r = new (swtc_api.Remote)({server: `'${settings.value.apiServer}'`})
+            if (settings.testChain) {
+              r = new (swtc_api.Remote)({server: 'https://tapi.jingtum.com', issuer: `'${settings.testIssuer}'`})
+            } else if (settings.apiServer) {
+              r = new (swtc_api.Remote)({server: `'${settings.apiServer}'`})
             } else {
               r = new (swtc_api.Remote)()
             }
@@ -631,8 +622,8 @@ ${string}
               card.code_pre = `
 if (!swtc_lib) { const swtc_lib = require("swtc-lib") } // node.js 环境需要导入库 
 let remote = ${computedRemoteString.value}
-let secret = '${settings.value.walletSecret}'
-let address = '${settings.value.walletAddress}'
+let secret = '${settings.walletSecret}'
+let address = '${settings.walletAddress}'
 
 remote.connectPromise()
   .then(async (server_info) => {
@@ -673,8 +664,8 @@ remote.connectPromise()
               card.code_pre = `
 if (!swtc_lib) { const swtc_lib = require("swtc-lib") } // node.js 环境需要导入库 
 let remote = ${computedRemoteString.value}
-let secret = '${settings.value.walletSecret}'
-let address = '${settings.value.walletAddress}'
+let secret = '${settings.walletSecret}'
+let address = '${settings.walletAddress}'
 
 remote.connectPromise()
   .then(async (server_info) => {
@@ -748,7 +739,7 @@ remote.connectPromise()
 `
             })
           }
-        const prepareBlocks = vueFunctionApi.value({
+        const prepareBlocks = vueCompositionApi.ref({
             title: '区块|井通节点',
             content: '区块|井通节点',
             lists: [
@@ -758,8 +749,8 @@ remote.connectPromise()
               'websocket - 查询写入',
             ]
           })
-        const prepareWeb = vueFunctionApi.value('<script src="https://unpkg.com/swtc-lib" />')
-        const prepares = vueFunctionApi.value({
+        const prepareWeb = vueCompositionApi.ref('<script src="https://unpkg.com/swtc-lib" />')
+        const prepares = vueCompositionApi.ref({
           swtclib: {
             key: 'swtc-lib',
             show: true,
@@ -839,10 +830,10 @@ remote.connectPromise()
             ]
           },
         })
-        const computedFilteredCards = vueFunctionApi.computed(() => {
+        const computedFilteredCards = vueCompositionApi.computed(() => {
             let filteredSet = new Set()
             activeLabels.value.forEach(label_index => {
-              let label = labels.value[label_index]
+              let label = labels[label_index]
               computedCardKeys.value.forEach(key => {
                 card = cards.value[key]
                 if (card.labels.indexOf(label) !== -1) {
@@ -854,7 +845,7 @@ remote.connectPromise()
             filteredSet.forEach(card => filtered.push(card))
             return filtered
           })
-        const cards = vueFunctionApi.value({
+        const cards = vueCompositionApi.ref({
           requestLedger: {
             key: 'requestLedger',
             interface: '',
@@ -1262,7 +1253,7 @@ remote.connectPromise()
           prepareBlocks,
           prepareWeb,
           prepares,
-          reosurceLinks,
+          resourceLinks,
           computedPrepareKeys,
           computedCardKeys,
           computedRemoteOption,

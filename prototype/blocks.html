@@ -2,190 +2,429 @@
 <html>
 <head>
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
-  <!-- <link href="https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css" rel="stylesheet"> -->
-  <link href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/prismjs/themes/prism.css" />
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
   <meta charset="UTF-8">
 </head>
 <body>
   <div id="app">
     <v-app>
-      <v-app-bar app dark>
-        <v-toolbar-title>{{ toolbarTitle }}</v-toolbar-title>
-        <v-spacer></v-spacer>
+    <v-app-bar app dark>
+      <v-toolbar-title>{{ settings.toolbarTitle }}</v-toolbar-title>
+      <v-spacer></v-spacer>
         <div class="text-center">
-            <v-menu offset-y>
-              <template v-slot:activator="{ on }">
-                <v-btn color="primary" dark v-on="on"> {{ activeLabel.name }} </v-btn>
-              </template>
-              <v-list>
-                <v-list-item v-for="(label, index) in labels" :key="index" @click="activeLabel=label">
-                  <v-list-item-title>{{ label.name }}</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
+          <v-menu offset-y>
+            <template v-slot:activator="{ on }"> <v-btn color="primary" dark v-on="on">资 源 连 接</v-btn> </template>
+            <v-list>
+              <v-list-item v-for="(item, index) in reosurceLinks" :key="index" @click="funcOpenUrl(item.url)">
+                <v-list-item-title>{{ item.name }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </div>
-        <v-spacer></v-spacer>
-        <v-btn v-for="link in links" :key="link.name" color="white" @click="link.dialog=!link.dialog" text rounded class="my-2">{{ link.name }}</v-btn>
-      </v-app-bar>
-      <v-content>
-        <v-container fluid>
-          <v-row>
-            <v-dialog v-model="links[0].dialog" persistent full-page>
-              <v-card min-height="500" min-width="400">
-                <v-card-title class="headline">账户<v-spacer></v-spacer>
-                  <v-btn color="red lighten-1" text @click="funcUpdateAccountInfo">刷新</v-btn>
-                  <v-btn color="red lighten-1" text @click="links[0].dialog = false">关闭</v-btn>
-                </v-card-title>
-                <v-container>
-                  <v-row>
-                    <v-tabs v-model="accountTabs">
-                      <v-tab v-for="(value, name) in accountInfo" :key="name">{{ name }}</v-tab>
-                    </v-tabs>
-                  </v-row>
-                  <v-row>
-                      <v-tabs-items v-model="accountTabs">
-                          <v-tab-item v-for="(value,name) in accountInfo" :key="name">
-                              <prism-component language="javascript">
-{{value}}</prism-component>
-                          </v-tab-item>
-                        </v-tabs-items>
-                      </v-tabs-items>
-                  </v-row>
-                </v-container>
-              </v-card>
-            </v-dialog>
-            <v-dialog v-model="links[1].dialog" persistent full-page>
-              <v-card min-height="500" min-width="400">
-                <v-card-title class="headline">浏览器<v-spacer></v-spacer><v-btn color="red lighten-1" text @click="links[1].dialog = false">关闭</v-btn></v-card-title>
-                <v-timeline dense>
-                  <v-timeline-item v-for="block of blocks" :key="block.id">
-                      <v-card>
-                      <v-card-title class="purple lighten-2" @click="block.blockDetail=!block.blockDetail">
-                          <h4 class="white--text font-weight-light">{{ block.id }}</h4>
+      <v-spacer></v-spacer>
+      <v-btn color="white" @click="funcUpdateAccountInfo" text rounded class="my-2">{{ wallets.name }}</v-btn>
+      <v-btn color="white" @click="browsers.dialog=!browsers.dialog" text rounded class="my-2">{{ browsers.name }}</v-btn>
+      <v-btn color="white" @click="settings.dialog=!settings.dialog" text rounded class="my-2">设置</v-btn>
+    </v-app-bar>
+
+    <v-content>
+      <v-container fluid>
+        <v-row>
+          <modal-wallet :wallets="wallets" :settings="settings" :remote="computedApiRemote"></modal-wallet>
+          <modal-browser :blocks="blocks" :browsers="browsers"></modal-browser>
+          <modal-settings :settings="settings"></modal-settings>
+
+          <v-dialog v-for="card in computedFilteredCards" :key="card.key" v-model="card.raised" persistent full-page>
+            <v-card min-height="500" min-width="400">
+              <v-card-title class="headline">remote.{{ card.key }}({{ funcCardParam(card) }})<v-spacer></v-spacer>
+                <v-btn color="primary" fab large @click="card.showParams=!card.showParams"> 参数 </v-btn>
+                <v-btn color="red lighten-1" fab large @click="card.raised = false">关闭</v-btn>
+              </v-card-title>
+              <v-toolbar dense dark>
+                <v-app-bar-nav-icon>
+                </v-app-bar-nav-icon>
+              </v-toolbar>
+              <v-container>
+                <v-row>
+                  <v-col cols="12">
+                    <v-card outlined tile :raised="card.raised">
+                      <v-card-title>
+                        <h2>remote.{{ card.key }}({{ funcCardParam(card) }})</h2>
                       </v-card-title>
-                      <v-container>
-                        <v-treeview :items="[block]" item-children="transactions"></v-treeview>
-                        <prism-component v-show="block.blockDetail" language="javascript">{{ block.block }}</prism-component>
-                      </v-container>
+                      <v-divider></v-divider>
+                      <v-row>
+                        <v-col cols="12" class="text-center" v-show="card.showParams">
+                          <prism-component language="javascript">{{ card.interface }}</prism-component>
+                        </v-col>
+                        <v-col cols="12" md="6">
+                          <v-row class="mx-2" v-show="codeReadonly" @click="codeReadonly=!codeReadonly">
+                            <prism-component language="javascript">{{ card.code_pre }}</prism-component>
+                          </v-row>
+                          <v-row class="mx-2" v-show="!codeReadonly" @click="codeReadonly=!codeReadonly">
+                            <v-textarea outlined auto-grow :name="card.key" label="辅助" v-model="card.code_pre" class="mt-2" :readonly="codeReadonly" @click="codeReadonly=!codeReadonly"></v-textarea>
+                          </v-row>
+                          <v-row class="mx-2 mt-4" @click="codeReadonly=true">
+                            <v-textarea outlined auto-grow :name="card.key" label="修改代码" v-model="card.code"></v-textarea>
+                          </v-row>
+                          <v-row class="mx-2" v-show="codeReadonly" @click="codeReadonly=!codeReadonly">
+                            <prism-component language="javascript">{{ card.code_post }}</prism-component>
+                          </v-row>
+                          <v-row class="mx-2" v-show="!codeReadonly" @click="codeReadonly=!codeReadonly">
+                            <v-textarea outlined auto-grow :name="card.key" label="辅助" v-model="card.code_post" class="mt-2" :readonly="codeReadonly" @click="codeReadonly=!codeReadonly"></v-textarea>
+                          </v-row>
+                        </v-col>
+                        <v-col cols="12" md="6">
+                          <prism-component language="javascript" :code="card.code_pre + card.code + card.code_post"></prism-component>
+                        </v-col>
+                      </v-row>
                     </v-card>
-                  </v-timeline-item>
-                </v-timeline>
-              </v-card>
-            </v-dialog>
-            <v-dialog v-model="links[2].dialog" persistent full-page>
-              <v-card min-height="500" min-width="400">
-                 <v-card-title class="headline">设置<v-spacer></v-spacer><v-btn color="red darken-1" text @click="links[2].dialog = false">关闭</v-btn></v-card-title>
-                 <v-toolbar dense dark><v-app-bar-nav-icon></v-app-bar-nav-icon></v-toolbar>
-                 <v-container>
-                    <v-row>
-                      <v-col cols="6" md="4">钱包地址</v-col>
-                      <v-col cols="6" md="8">{{ walletAddress }}</v-col>
-                      <v-col cols="6" md="4">钱包密钥</v-col>
-                      <v-col cols="6" md="8" class="pb-4"><v-text-field label="secret" append-icon="visibility" v-model="walletSecret"></v-text-field></v-col>
-                    </v-row>
-                    <v-row>
-                      <v-col cols="6" md="4">测试链</v-col>
-                      <v-col cols="6" md="8"  class="pb-4"><v-switch v-model="testChain" readonly></v-switch></v-col>
-                    </v-row>
-                    <v-row>
-                      <v-col cols="6" md="4">更新间隔</v-col>
-                      <v-col cols="6" md="8" class="pr-4">
-                        <v-slider v-model="updateInterval" class="align-center" max="20" min="5" hide-details>
-                          <template v-slot:append>
-                            <v-text-field v-model="updateInterval" class="mt-0 pt-0" hide-details single-line type="number" style="width: 60px"></v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                    </v-row>
-                    <v-row>
-                      <v-col cols="6" md="4">最多区块</v-col>
-                      <v-col cols="6" md="8" class="pr-4">
-                        <v-slider v-model="maxBlocks" class="align-center" max="100" min="5" hide-details>
-                          <template v-slot:append>
-                            <v-text-field v-model="maxBlocks" class="mt-0 pt-0" hide-details single-line type="number" style="width: 60px"></v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                    </v-row>
-                    <v-row>
-                      <v-col cols="12" md="6" class="font-weight-medium">
-                        <v-textarea outlined auto-grow row-height="32" name="evalString" label="修改代码" v-model="evalString" class="mt-2"></v-textarea>
-                      </v-col>
-                      <v-col cols="12" md="6">
-                        <prism-component language="javascript" :code="evalString"></prism-component>
-                      </v-col>
-                    </v-row>
-                 </v-container>
-                 <v-card-actions>
-                   <v-spacer></v-spacer>
-                   <v-btn color="green darken-1" text @click="funcEval(evalString)">运行代码</v-btn>
-                 </v-card-actions>
-              </v-card>
-            </v-dialog>
-          </v-row>
-          <v-row>
-            <v-col v-for="key in computedCardKeys" :key="key" cols="12" md="6" lg="4" xl="3">
-              <v-card :height="cardHeight" outlined tile :raised="cards[key].raised" @click="funcCardRaise(key)">
-                <v-card-title>
-                  <h2>{{ key }}</h1>
-                </v-card-title>
-                <v-divider></v-divider>
-                <v-card-text>{{ cards[key].content }}</v-card-text>
-                <prism-component language="javascript" :code="cards[key].code"></prism-component>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-content>
+                  </v-col>
+                </v-row>
+              </v-container>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="green darken-1" fab large @click="funcCopy(card.code_pre + card.code + card.code_post)">复制</v-btn>
+                <v-btn color="red darken-1" fab large @click="funcEval(card.code_pre + card.code + card.code_post)">运行</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </v-row>
+	<v-flex text-center><h1>准备 概念</h1></v-flex>
+        <v-row>
+          <v-col cols="12" md="6" lg="4">
+            <v-card :height="settings.cardHeight" outlined tile raised>
+              <v-card-title>
+                <h3>区块</h3><v-spacer></v-spacer><h3>节点</h3> 
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-timeline dense>
+                    <v-timeline-item v-for="(block, index) in dashboardBlocks" :key="block.id" :v-show="index < 3">
+                      <v-card flat @click="block.blockDetail=!block.blockDetail">
+                        <h4 class="font-weight-light">{{ block.id }}</h4>
+                        <v-dialog @click="block.blockDetail=!block.blockDetail" v-model="block.blockDetail">
+                          <v-card>
+                            <v-card-title>
+                             <v-spacer></v-spacer>
+                              区块{{block.id}}内容 <v-spacer></v-spacer>
+                              <v-btn color="red lighten-1" text @click="block.blockDetail=!block.blockDetail"><v-icon fab large>mdi-close-circle-outline</v-icon></v-btn>
+                            </v-card-title>
+                            <prism-component language="javascript">{{ block.block }}</prism-component>
+                          </v-card>
+                        </v-dialog>
+                      </v-card>
+                    </v-timeline-item>
+                  </v-timeline>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-list-item v-for="list in prepareBlocks.lists" :key="list">
+                      <v-list-item-content>
+                        <v-list-item-title>{{ list }}</v-list-item-title>
+                      </v-list-item-content>
+                  </v-list-item>
+                </v-col>
+              </v-row>
+            </v-card>
+          </v-col>
+          <v-col cols="12" md="6" lg="4">
+            <v-card :height="settings.cardHeight" outlined tile raised>
+              <v-card-title>
+                <h3>SWTC-LIB库</h3>
+              </v-card-title>
+              <v-divider></v-divider>
+              <h3 class="pl-4">node.js引用</h3>
+              <v-list-item>
+                  <v-list-item-content>
+                    <prism-component inline language="javascript">const swtc_lib = require('swtc-lib')</prism-component>
+                  </v-list-item-content>
+              </v-list-item>
+              <h3 class="pl-4">web引用</h3>
+              <v-list-item>
+                  <v-list-item-content>
+                    <prism-component inline> {{ prepareWeb }} </prism-component>
+                  </v-list-item-content>
+              </v-list-item>
+            </v-card>
+          </v-col>
+          <v-col cols="12" md="6" lg="4">
+            <v-card :height="settings.cardHeight" outlined tile raised>
+              <v-card-title>
+                <h3>通证 - 数量</h3>
+              </v-card-title>
+              <v-divider></v-divider>
+              <h3 class="pl-4">TOKEN - AMOUNT</h3>
+              <v-list-item>
+                  <v-list-item-content>
+                    <prism-component inline language="javascript">{currency: 'SWT', issuer: ''}</prism-component>
+                    <prism-component inline language="javascript">currency: 'CNY', issuer: '银关地址'}</prism-component>
+                  </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                  <v-list-item-content>
+                    <prism-component inline language="javascript">{value: 10, currency: 'SWT', issuer: ''}</prism-component>
+                    <prism-component inline language="javascript">{value:10, currency:'JCC', issuer:'银关地址'}</prism-component>
+                  </v-list-item-content>
+              </v-list-item>
+            </v-card>
+          </v-col>
+          <v-col v-for="(prepare,key) in prepares" v-show="prepare.show" :key="key" cols="12" md="6" lg="4" xl="3">
+            <v-card :height="settings.cardHeight" outlined tile>
+              <v-card-title>
+                <h3>{{ prepare.title }}</h3>
+              </v-card-title>
+              <v-divider></v-divider>
+              <h3 class="pl-4">{{ prepare.content }}</h3>
+              <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title v-for="(list,index) in prepare.lists" :key="index">
+                      <span class="font-weight-bold">{{ list.name }}&nbsp;&nbsp;</span><prism-component inline language="javascript">{{ list.code }}</prism-component>
+                    </v-list-item-title>
+                  </v-list-item-content>
+              </v-list-item>
+            </v-card>
+          </v-col>
+        </v-row>
+        <v-divider></v-divider>
+	<v-container class="d-flex justify-center align-content-center"  text-center>
+            <v-chip-group v-model="activeLabels" column mandatory multiple active-class="primary--text">
+              <v-chip v-for="label in labels" :key="label" filter outlined large>{{ label }}</v-chip>
+            </v-chip-group>
+  </v-container>
+        <v-divider></v-divider>
+        <v-row>
+          <v-col v-for="card in computedFilteredCards" :key="card.key" cols="12" md="6" lg="4">
+            <v-card :height="settings.cardHeight" outlined tile :raised="card.raised" @click="funcCardRaise(card.key)">
+              <v-toolbar color="indigo" dark>
+                <v-toolbar-title>remote.{{ card.key }}({{ funcCardParam(card) }})</v-toolbar-title>
+              </v-toolbar>
+              <v-divider></v-divider>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>{{ card.content }}</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>返回 {{ card.returns }}</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>参数 {{ card.params }}</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-content>
     </v-app>
   </div>
 
+  <script src="https://unpkg.com/prismjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
-  <script src="https://unpkg.com/vue-function-api/dist/vue-function-api.umd.js"></script>
+  <script src="https://unpkg.com/vue-function-api@2.2.0/dist/vue-function-api.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
   <script src="https://unpkg.com/vue-prism-component@1.1.1/dist/vue-prism-component.js"></script>
+  <script src="https://unpkg.com/vue-markdown@2.2.4/dist/vue-markdown.js"></script>
   <script src="https://unpkg.com/swtc-lib"></script>
   <script src="https://unpkg.com/swtc-api"></script>
-  <script src="https://unpkg.com/prismjs"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> -->
   <script>
     Vue.use(vueFunctionApi.plugin)
-    const Remote = swtc_api.Remote
-    const Wallet = Remote.Wallet
+    Vue.use(VueMarkdown)
+    const remoteTypes = 'import { IMarker, IAmount } from "swtc-transaction"\nexport {\n  IMarker,\n  ICurrency,\n  IAmount,\n  ISwtcTxOptions,\n  IPaymentTxOptions,\n  IOfferCreateTxOptions,\n  IOfferCancelTxOptions,\n  IContractInitTxOptions,\n  IContractInvokeTxOptions,\n  IContractDeployTxOptions,\n  IContractCallTxOptions,\n  ISignTxOptions,\n  IAccountSetTxOptions,\n  IRelationTxOptions\n} from "swtc-transaction"\n\nexport interface IRemoteOptions {\n  server?: string\n  server_failover?: string\n  issuer?: string\n  token?: string\n  solidity?: boolean\n  local_sign?: boolean\n  timeout?: number\n  failover?: boolean\n}\n\nexport interface IRequestLedgerOptions {\n  ledger_index?: string | number\n  ledger_hash?: string\n  full?: boolean\n  expand?: boolean\n  transactions?: boolean\n  accounts?: boolean\n}\n\nexport interface IRequestAccountOptions {\n  account: string\n  type?: string\n  ledger?: string\n  ledger_index: string | number\n  ledger_hash: string\n  marker?: IMarker\n  peer?: any\n  limit?: string | number\n}\n\nexport interface IRequestAccountsOptions {\n  ledger_index?: string | number\n  ledger_hash?: string\n  ledger?: string\n  marker?: IMarker\n}\n\nexport interface IRequestTxOptions {\n  hash: string\n}\n\nexport interface IRequestAccountInfoOptions {\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n}\n\nexport interface IRequestAccountTumsOptions {\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n}\n\nexport interface IRequestAccountRelationsOptions {\n  type: string\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n  limit?: string | number\n  marker?: IMarker\n}\n\nexport interface IRequestAccountOffersOptions {\n  type: string\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n  limit?: string | number\n  marker?: IMarker\n}\n\nexport interface IRequestAccountTxOptions {\n  type: string\n  account: string\n  ledger?: string\n  ledger_index?: string | number\n  ledger_hash?: string\n  ledger_min?: number\n  ledger_max?: number\n  limit?: string | number\n  marker?: IMarker\n  offset?: string | number\n  forward?: boolean\n}\n\nexport interface IRequestOrderBookOptions {\n  taker?: string\n  taker_gets?: IAmount\n  taker_pays?: IAmount\n  gets?: IAmount\n  pays?: IAmount\n  limit?: string | number\n  marker?: IMarker\n}\n'.split(/\n\n/).filter( e => /export interface/.test(e))
+    const txTypes = 'export interface IMarker {\n  ledger: string | number\n  seq: string | number\n}\n\nexport interface ICurrency {\n  currency: string\n  issuer: string\n}\n\nexport interface IAmount {\n  currency: string\n  issuer: string\n  value: number\n}\n\nexport interface ISwtcTxOptions {\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IPaymentTxOptions {\n  amount: IAmount\n  source?: string\n  from?: string\n  account?: string\n  destination?: string\n  to?: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IOfferCreateTxOptions {\n  type: string\n  source?: string\n  from?: string\n  account?: string\n  gets?: IAmount\n  pays?: IAmount\n  taker_gets?: IAmount\n  taker_pays?: IAmount\n  platform?: any\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IOfferCancelTxOptions {\n  sequence: number\n  source?: string\n  from?: string\n  account?: string\n  memo?: string\n  secret?: string\n}\n\nexport interface IContractInitTxOptions {\n  amount: number\n  account: string\n  abi: any[]\n  payload: string\n  params?: string[]\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IContractInvokeTxOptions {\n  amount: number\n  account: string\n  destination: string\n  abi: any[]\n  func: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IContractDeployTxOptions {\n  amount: IAmount\n  account: string\n  payload: string\n  params?: string[]\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IContractCallTxOptions {\n  amount: IAmount\n  account: string\n  destination: string\n  params?: string[]\n  func?: string\n  foo?: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface ISignTxOptions {\n  blob: string\n}\n\nexport interface IAccountSetTxOptions {\n  type: string\n  source?: string\n  from?: string\n  account?: string\n  set?: string | number\n  set_flag?: string | number\n  clear?: string | number\n  clear_flag?: string | number\n  delegate_key?: string\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n\nexport interface IRelationTxOptions {\n  type: string\n  source?: string\n  from?: string\n  account?: string\n  target: string\n  limit: IAmount\n  quality_out: any\n  quality_in: any\n  memo?: string\n  secret?: string\n  sequence?: string | number\n}\n'.split(/\n\n/).filter( e => /export interface/.test(e))
+    const interfaces = [...remoteTypes, ...txTypes]
+    const Wallet = swtc_api.Remote.Wallet
+    const sleep = time => new Promise(res => setTimeout(() => res(), time))
+
+    const ModalSettings = {
+      props: [ 'settings' ],
+      components: { PrismComponent },
+      setup(props) {
+        return {
+        }
+      },
+      template: `
+          <v-dialog v-model="settings.dialog" persistent full-page>
+            <v-card min-height="500" min-width="400">
+              <v-card-title class="headline">设置<v-spacer></v-spacer><v-btn color="red darken-1" text @click="settings.dialog = false"><v-icon fab large>mdi-close-circle-outline</v-icon></v-btn></v-card-title>
+              <v-toolbar dense dark><v-app-bar-nav-icon></v-app-bar-nav-icon></v-toolbar>
+              <v-container>
+                <v-row>
+                  <v-col cols="12" sm="6" md="4">账户地址</v-col>
+                  <v-col cols="12" sm="6" md="8">{{ settings.walletAddress }}</v-col>
+                  <v-col cols="12" sm="6" md="4">账户密钥</v-col>
+                  <v-col cols="12" sm="6" md="8" class="pb-4"><v-text-field label="secret" :type="settings.walletSecretEye ? 'text' : 'password'" :append-icon="settings.walletSecretEye? 'mdi-eye' : 'mdi-eye-off'" @click:append="settings.walletSecretEye=!settings.walletSecretEye" v-model="settings.walletSecret"></v-text-field></v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12" sm="6" md="4">测试链</v-col>
+                  <v-col cols="12" sm="6" md="8"  class="pb-4"><v-switch v-model="settings.testChain"></v-switch></v-col>
+                  <v-col cols="12" sm="6" md="4">节点服务器</v-col>
+                  <v-col cols="12" sm="6" md="8" class="pb-4"><v-text-field label="libServer" v-model="settings.libServer" readonly></v-text-field></v-col>
+                  <v-col cols="12" sm="6" md="4">api服务器</v-col>
+                  <v-col cols="12" sm="6" md="8" class="pb-4"><v-text-field label="apiServer" v-model="settings.apiServer" readonly></v-text-field></v-col>
+                  <v-col cols="12" sm="6" md="4">测试银关</v-col>
+                  <v-col cols="12" sm="6" md="8" class="pb-4"><v-text-field label="fingate" v-model="settings.testIssuer" readonly></v-text-field></v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12" sm="6" md="4">更新间隔</v-col>
+                  <v-col cols="12" sm="6" md="8" class="pr-4">
+                    <v-slider v-model="settings.updateInterval" class="align-center" max="20" min="5" hide-details>
+                      <template v-slot:append>
+                        <v-text-field v-model="settings.updateInterval" class="mt-0 pt-0" hide-details single-line type="number" style="width: 60px"></v-text-field>
+                      </template>
+                    </v-slider>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12" sm="6" md="4">最多区块</v-col>
+                  <v-col cols="12" sm="6" md="8" class="pr-4">
+                    <v-slider v-model="settings.maxBlocks" class="align-center" max="100" min="5" hide-details>
+                      <template v-slot:append>
+                        <v-text-field v-model="settings.maxBlocks" class="mt-0 pt-0" hide-details single-line type="number" style="width: 60px"></v-text-field>
+                      </template>
+                    </v-slider>
+                  </v-col>
+                </v-row>
+               </v-container>
+            </v-card>
+          </v-dialog>
+        `
+    }
+    const ModalWallet = {
+      props: [ 'wallets', 'remote', 'settings' ],
+      components: { PrismComponent },
+      setup(props) {
+        const funcUpdateAccountInfo = async () => {
+            console.log(`...updating balance for ${props.settings.walletAddress}`)
+            props.wallets.dialog = true
+            props.remote.getAccountBalances(props.settings.walletAddress).then(result => props.wallets.accountInfo.balances = result).catch(() => {})
+            props.remote.getAccountPayments(props.settings.walletAddress).then(result => props.wallets.accountInfo.payments = result).catch(() => {})
+            props.remote.getAccountOrders(props.settings.walletAddress).then(result => props.wallets.accountInfo.orders = result).catch(() => {})
+            props.remote.getAccountTransactions(props.settings.walletAddress).then(result => props.wallets.accountInfo.txs = result).catch(() => {})
+          }
+        return {
+          funcUpdateAccountInfo
+        }
+      },
+      template: `
+          <v-dialog v-model="wallets.dialog" persistent full-page>
+            <v-card min-height="500" min-width="400">
+              <v-card-title class="headline">账户<v-spacer></v-spacer>
+                <v-btn color="red lighten-1" text @click="funcUpdateAccountInfo"><v-icon fab large>mdi-reload</v-icon></v-btn>
+                <v-btn color="red lighten-1" text @click="wallets.dialog=false"><v-icon fab large>mdi-close-circle-outline</v-icon></v-btn>
+              </v-card-title>
+              <v-toolbar dense dark><v-app-bar-nav-icon></v-app-bar-nav-icon></v-toolbar>
+              <v-container>
+                <v-row>
+                  <v-tabs v-model="wallets.accountTabs">
+                    <v-tabs-slider></v-tabs-slider>
+                    <v-tab v-for="(v, name) in wallets.accountInfo" :key="name" :href="'#' + name">{{ name }}</v-tab>
+                  </v-tabs>
+                </v-row>
+                <v-row>
+                  <v-tabs-items v-model="wallets.accountTabs">
+                      <v-tab-item v-for="(v, name) in wallets.accountInfo" :key="name" :value="name">
+                          <prism-component language="javascript">
+{{v}}</prism-component>
+                      </v-tab-item>
+                  </v-tabs-items>
+                </v-row>
+              </v-container>
+            </v-card>
+          </v-dialog>
+        `
+    }
+    const ModalBrowser = {
+      props: [ 'browsers', 'blocks' ],
+      components: { PrismComponent },
+      setup(props) {
+        return {
+        }
+      },
+      template: `
+          <v-dialog v-model="browsers.dialog" persistent full-page>
+            <v-card min-height="500" min-width="400">
+              <v-card-title class="headline">浏览器<v-spacer></v-spacer><v-btn color="red lighten-1" text @click="browsers.dialog=false"><v-icon fab large>mdi-close-circle-outline</v-icon></v-btn></v-card-title>
+              <v-toolbar dense dark><v-app-bar-nav-icon></v-app-bar-nav-icon></v-toolbar>
+              <v-timeline dense>
+                <v-timeline-item v-for="block in blocks" :key="block.id">
+                    <v-card>
+                    <v-card-title class="purple lighten-2" @click="block.blockDetail=!block.blockDetail">
+                        <h4 class="white--text font-weight-light">{{ block.id }}</h4>
+                    </v-card-title>
+                    <v-container>
+                      <v-treeview :items="[block]" item-children="transactions"></v-treeview>
+                      <prism-component v-show="block.blockDetail" language="javascript">{{ block.block }}</prism-component>
+                    </v-container>
+                  </v-card>
+                </v-timeline-item>
+              </v-timeline>
+            </v-card>
+          </v-dialog>
+        `
+    }
     const vm = new Vue({
       el: '#app',
-      vuetify: new Vuetify({icons: {iconfont: 'fa'}}),
-      components: { PrismComponent },
+      vuetify: new Vuetify(),
+      components: { PrismComponent, ModalBrowser, ModalWallet, ModalSettings },
       setup() {
-        const dialog = vueFunctionApi.value(false)
-        const testChain = vueFunctionApi.value(localStorage.testChain || true)
         const ledger = vueFunctionApi.value(0)
         const started = vueFunctionApi.value(false)
+        const codeReadonly = vueFunctionApi.value(true)
         const interval = vueFunctionApi.value(null)
-        const updateInterval = vueFunctionApi.value(10)
-        const evalString = vueFunctionApi.value('// node.js需要导入库 swtc_lib = require("swtc-lib")')
-        const testIssuer = vueFunctionApi.value(localStorage.testIssuer || 'jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS')
-        const walletSecret = vueFunctionApi.value(localStorage.walletSecret || '')
-        const walletAddress = vueFunctionApi.value(localStorage.walletAddress || '')
-        const accountInfo = vueFunctionApi.value({info: {loading: true}, balances: {loading: true}, txs: {loading: true}})
-        const accountTabs = vueFunctionApi.value('balances')
-        const cardHeight = vueFunctionApi.value(localStorage.cardHeight || 300)
-        const libServer = vueFunctionApi.value(localStorage.libServer || 'ws://ts5.jingtum.com:5020')
-        const apiServer = vueFunctionApi.value(localStorage.apiServer || 'https://tapi.jingtum.com')
-        const toolbarTitle = vueFunctionApi.value('SWTCLIB 教程')
-        const labels = vueFunctionApi.value([ {id: 'base', name: '基础知识'}, {id: 'read', name: '查询信息'}, {id: 'write', name: '制造信息'}, {id: 'advanced', name: '进阶知识'}, {id: 'supplemental', name: '辅助知识'}, {id: 'unique', name: '独  有'}, {id: 'all', name: '所  有'} ])
-        const activeLabel = vueFunctionApi.value({id: 'all', name: '所  有'})
-        const links = vueFunctionApi.value([ {id: 'account', name: '账户', dialog: false}, {id: 'browser', name: '浏览器', dialog: false}, {id: 'settings', name: '设置', dialog: false} ])
+        const reosurceLinks = [
+          {name: 'swtdocs.org', url: 'http://www.swtcdocs.org'},
+          {name: 'swtclib库源码', url: 'https://github.com/swtcca/swtclib'},
+          {name: 'swtclib库文档', url: 'http://swtc.daszichan.com'},
+          {name: 'jingtunlib库文档', url: 'http://developer.jingtum.com'},
+          {name: 'swtclib实例', url: 'http://swtc.daszichan.com/docs/examples'},
+          {name: 'javascript教程', url: 'https://www.liaoxuefeng.com/wiki/1022910821149312'}
+        ]
+        const settings = vueFunctionApi.value({
+            dialog: false,
+            toolbarTitle: 'SWTCLIB 教程',
+            testChain: localStorage.testChain || true,
+            walletSecret: localStorage.walletSecret || '',
+            walletSecretEye: localStorage.walletSecretEye || true,
+            walletAddress: localStorage.walletAddress || '',
+            updateInterval: 10,
+            maxBlocks: 10,
+            cardHeight: localStorage.cardHeight || 270,
+            libServer: localStorage.libServer || 'ws://ts5.jingtum.com:5020',
+            apiServer: localStorage.apiServer || 'https://tapi.jingtum.com',
+            testIssuer:localStorage.testIssuer || 'jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS',
+          })
+        const labels = vueFunctionApi.value([ '基础', '常用', '账户', '查询', '写入', '进阶', '辅助', '独有', '关系', '合约', '买卖', '未知' ])
+        const activeLabels = vueFunctionApi.value([0])
+        const wallets = vueFunctionApi.value({
+            accountInfo: {balances: {loading: true}, payments: {loading: true}, orders: {loading: true}, txs: {loading: true}},
+            accountTabs: 'balances',
+            id: 'account',
+            name: '账户',
+            dialog: false
+          })
+        const browsers = vueFunctionApi.value({id: 'browser', name: '浏览器', dialog: false})
         const blocks = vueFunctionApi.value([])
-        const maxBlocks = vueFunctionApi.value(10)
-        const funcUpdateAccountInfo = async () => {
-            let remote = computedApiRemote.value
-            remote.getAccountBalances(walletAddress.value).then(result => accountInfo.value.balances = result).catch(error => accountInfo.value.balances = {error: '未激活'})
-            remote.getAccountTransactions(walletAddress.value).then(result => accountInfo.value.txs = result).catch(error => accountInfo.value.balances = {error: '未激活'})
-          }
+        const dashboardBlocks = vueFunctionApi.value([])
+        const funcCopy = (string) => {
+          navigator.permissions.query({name: "clipboard-write"}).then(result => {
+             if (result.state == "granted" || result.state == "prompt") {
+               /* write to the clipboard now */
+               navigator.clipboard.writeText(string).then(function() {
+                  alert("代码已复制")
+                }, function() {
+                  alert("代码未能复制")
+                });
+             }
+          })
+        }
         const funcEval = (string) => {
           string = `try {
 ${string}
@@ -198,6 +437,7 @@ ${string}
         }
         const funcSetInterval = () => {
             let remote = computedApiRemote.value
+            console.log(remote.config())
             interval.value = setInterval(async () => {
                 if (started.value) {
                   try {
@@ -206,7 +446,9 @@ ${string}
                       ledger.value = ledger.value + 1
                       if (!blocks.value.find(e => e.id === block.ledger_index)) {
                         blocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
-                        blocks.value.splice(maxBlocks.value)
+                        dashboardBlocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
+                        blocks.value.splice(settings.value.maxBlocks)
+                        dashboardBlocks.value.splice(3)
                       }
                     } else {
                       console.log(`...ledger ${ledger.value + 1} not closed yet`)
@@ -218,82 +460,135 @@ ${string}
                 } else {
                   console.log('not started yet')
                 }
-              }, updateInterval.value * 1000)
+              }, settings.value.updateInterval * 1000)
         }
         const funcClearInterval = () => {
+          console.log("...clearing interval")
           if (interval.value) {
             clearInterval(interval.value)
           }
         }
+        const funcPrepareRaise = (key) => {
+            computedPrepareKeys.value.forEach(
+              e => e === key ? (prepares.value)[e].raised = true : (prepares.value)[e].raised = false
+            )
+          }
         const funcCardRaise = (key) => {
             computedCardKeys.value.forEach(
               e => e === key ? (cards.value)[e].raised = true : (cards.value)[e].raised = false
             )
           }
-        const funcMarked = (text) => marked(text)
-        vueFunctionApi.watch( walletSecret, (value, oldValue) => { if (Wallet.isValidSecret(value)) { localStorage.walletSecret = walletSecret.value; walletAddress.value = Wallet.fromSecret(value).address; localStorage.walletAddress = walletAddress.value }}, {lazy: true})
-        vueFunctionApi.watch(testChain, (value, oldValue) => {
+        const funcCardParam = (card) => {
+            let r = ''
+            if (card.params === 'object') {
+              r = `{}`
+            }
+            return r
+          }
+        const funcCardParamInterface = (card) => {
+            let r = '{}'
+            if (card.params === 'object') {
+              let re =  new RegExp(`export interface I${card.key}`.replace('build',''), "i")
+              let iface = interfaces.find( iface => re.test(iface))
+              if (iface) {
+                r = iface
+              }
+            }
+            return r
+          }
+        // const funcMarked = (text) => marked(text)
+        const funcUpdateAccountInfo = async () => {
+            wallets.value.dialog = true
+            let remote = computedApiRemote.value
+            remote.getAccountBalances(settings.value.walletAddress).then(result => wallets.value.accountInfo.balances = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
+            remote.getAccountPayments(settings.value.walletAddress).then(result => wallets.value.accountInfo.payments = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
+            remote.getAccountOrders(settings.value.walletAddress).then(result => wallets.value.accountInfo.orders = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
+            remote.getAccountTransactions(settings.value.walletAddress).then(result => wallets.value.accountInfo.txs = result).catch(error => wallets.value.accountInfo.balances = {error: '未激活'})
+          }
+        vueFunctionApi.watch(activeLabels, (value, oldValue) => {
+            computedPrepareKeys.value.forEach(key => {
+              let prepare = prepares.value[key]
+              prepare.show = false
+              value.forEach(label_index => {
+                let label = labels.value[label_index]
+                if (prepare.labels.indexOf(label) !== -1) {
+                  prepare.show = true
+                }
+              })
+            })
+          }, {lazy: true})
+        vueFunctionApi.watch(() => settings.value.walletSecret, (value, oldValue) => { if (Wallet.isValidSecret(value)) { localStorage.walletSecret = value; settings.value.walletAddress = Wallet.fromSecret(value).address; localStorage.walletAddress = settings.value.walletAddress }}, {lazy: true})
+        vueFunctionApi.watch(() => settings.value.updateInterval, async (value, oldValue) => {
             console.log(`detected change from ${oldValue} to ${value}` )
             funcClearInterval()
             funcSetInterval()
           }, {lazy: true})
+        vueFunctionApi.watch(() => settings.value.testChain, async (value, oldValue) => {
+            console.log(`detected change from ${oldValue} to ${value}` )
+            if (value) {
+              settings.value.libServer = 'ws://ts5.jingtum.com:5020'
+              settings.value.apiServer = 'https://tapi.jingtum.com'
+            } else {
+              settings.value.libServer = ''
+              settings.value.apiServer = ''
+            }
+            funcClearInterval()
+            started.value = false
+            await funcInitBlocks()
+            funcSetInterval()
+            funcInitCardsCodes()
+          }, {lazy: true})
+        const computedPrepareKeys = vueFunctionApi.computed(() => Object.keys(prepares.value))
         const computedCardKeys = vueFunctionApi.computed(() => Object.keys(cards.value))
         vueFunctionApi.onCreated(async () => {
             console.log("...vue created")
-            if (!walletSecret.value || !Wallet.isValidSecret(walletSecret.value)) {
+            if (!settings.value.walletSecret || !Wallet.isValidSecret(settings.value.walletSecret)) {
               // generate a wallet
               let wallet = Wallet.generate()
-              walletSecret.value = wallet.secret
-              walletAddress.value = wallet.address
-              localStorage.walletSecret = walletSecret
-              localStorage.walletAddress = walletAddress
+              settings.value.walletSecret = wallet.secret
+              settings.value.walletAddress = wallet.address
+              localStorage.walletSecret = wallet.secret
+              localStorage.walletAddress = wallet.address
             }
-            if (testChain) {
-              evalString.value += `\nlet remote = new swtc_lib.Remote(
-    {
-      server: "${libServer.value}",
-      // issuer: "${testIssuer.value}"
-    }
-  )
-`
-            } else {
-              evalString.value += `\nlet remote = new swtc_lib.Remote()`
-            }
-            evalString.value += `\nconsole.log(remote.config())`
             let remote = computedApiRemote.value
-            if (Wallet.isValidSecret(walletSecret.value)) {
-              walletAddress.value = Wallet.fromSecret(walletSecret.value).address
-              localStorage.walletAddress = walletAddress.value
+            if (Wallet.isValidSecret(settings.value.walletSecret)) {
+              settings.value.walletAddress = Wallet.fromSecret(settings.value.walletSecret).address
+              localStorage.walletAddress = settings.value.walletAddress
             } else {
-              walletAddress.value = 'secret incorrect 密钥错误'
-              localStorage.walletAddress = walletAddress.value
+              settings.value.walletAddress = 'secret incorrect 密钥错误'
+              localStorage.walletAddress = settings.value.walletAddress
               localStorage.walletSecret = ''
             }
-            try {
-              let block = await remote.getLedger()
-              ledger.value = block.ledger_index
-              started.value = true
-              console.log('block explorer initiated')
-              block = await remote.getLedger(ledger.value)
-              
-              blocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: true, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
-            } catch (error) {
-              console.log(error)
-            }
+            await funcInitBlocks()
           })
-        vueFunctionApi.onMounted(() => { console.log("...vue mounted"); funcInitCards(); funcSetInterval() })
+        vueFunctionApi.onMounted(() => {
+            // console.log("...vue mounted")
+            funcInitCards()
+            funcSetInterval()
+          })
         const computedRemoteOption = vueFunctionApi.computed(() => {
-            return testChain.value ? {server: 'ws://ts5.jingtum.com:5020', issuer: testIssuer.value} : {}
+            return settings.value.testChain ? {server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.value.testIssuer}'`} : {}
           })
         const computedApiRemoteOption = vueFunctionApi.computed(() => {
-            testChain.value ? {server: 'https://tapi.jingtum.com', issuer: testIssuer.value} : {}
+            return settings.value.testChain ? {server: 'https://tapi.jingtum.com', issuer: `'${settings.value.testIssuer}'`} : {}
+          })
+        const computedRemoteString = vueFunctionApi.computed(() => {
+            let r
+            if (settings.value.testChain) {
+              r = `new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: '${settings.value.testIssuer}'})`
+            } else if (settings.value.libServer) {
+              r = `new (swtc_lib.Remote)({server: ${settings.value.libServer}})`
+            } else {
+              r = `new (swtc_lib.Remote)()`
+            }
+            return r
           })
         const computedRemote = vueFunctionApi.computed(() => {
             let r
-            if (testChain.value) {
-              r = new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: testIssuer.value})
-            } else if (libServer.value) {
-              r = new (swtc_lib.Remote)({server: libServer.value})
+            if (settings.value.testChain) {
+              r = new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.value.testIssuer}'`})
+            } else if (settings.value.libServer) {
+              r = new (swtc_lib.Remote)({server: settings.value.libServer})
             } else {
               r = new (swtc_lib.Remote)()
             }
@@ -301,219 +596,692 @@ ${string}
           })
         const computedApiRemote = vueFunctionApi.computed(() => {
             let r
-            if (testChain.value) {
-              r = new (swtc_api.Remote)({server: 'https://tapi.jingtum.com', issuer: testIssuer.value})
-            } else if (apiServer.value) {
-              r = new (swtc_api.Remote)({server: apiServer.value})
+            if (settings.value.testChain) {
+              r = new (swtc_api.Remote)({server: 'https://tapi.jingtum.com', issuer: `'${settings.value.testIssuer}'`})
+            } else if (settings.value.apiServer) {
+              r = new (swtc_api.Remote)({server: `'${settings.value.apiServer}'`})
             } else {
               r = new (swtc_api.Remote)()
             }
             return r
           })
-        const funcInitCards = () => {
-            computedCardKeys.value.forEach(key => {
-              console.log(`processing card for ${key}`)
-              cards.value[key].code = `
-// node.js 环境需要导入库 swtc_lib = require("swtc-lib")
+        const funcInitBlocks = async () => {
+          try {
+            blocks.value.splice(0)
+            dashboardBlocks.value.splice(0)
+            let remote = computedApiRemote.value
+            let block = await remote.getLedger()
+            ledger.value = block.ledger_index
+            started.value = true
+            //console.log('block explorer initiated')
+            block = await remote.getLedger(ledger.value)
+            
+            blocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: true, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
+            dashboardBlocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
+          } catch (error) {
+            console.log(error)
+          }
+        }
+        const funcOpenUrl = (url) => {
+          window.open(url, '_blank')
+        }
+        const funcInitCardsCodes = () => {
+            computedCardKeys.value.forEach((key) => {
+              let card = cards.value[key]
+              card.code_pre = `
+if (!swtc_lib) { const swtc_lib = require("swtc-lib") } // node.js 环境需要导入库 
+let remote = ${computedRemoteString.value}
+let secret = '${settings.value.walletSecret}'
+let address = '${settings.value.walletAddress}'
 
-let remote = new swtc_lib.Remote({server: "${libServer.value}"})
 remote.connectPromise()
-  .then(async (result) => {
-      console.log(result)
+  .then(async (server_info) => {
+      console.log(server_info)
       // 试验场所
-      // let result = await remote.${key}().submitPromise()
-      // console.log(result)
-      remote.${key}().submitPromise().then(console.log)
+`
+            })
+          }
+        const funcInitCards = () => {
+            computedCardKeys.value.forEach((key) => {
+              let card = cards.value[key]
+              card.interface = funcCardParamInterface(card)
+              // console.log(`processing card for ${key}`)
+              if (key.startsWith('request')) {
+                card.labels.push('查询')
+              }
+              if (key.startsWith('build')) {
+                card.labels.push('写入')
+                card.labels.push('账户')
+              }
+              if (key.match(/contract/i)) {
+                card.labels.push('合约')
+              }
+              if (key.match(/orderbook/i)) {
+                card.labels.push('买卖')
+              }
+              if (key.match(/offer/i)) {
+                card.labels.push('买卖')
+              }
+              if (key.match(/relation/i)) {
+                card.labels.push('关系')
+              }
+              if (key.match(/Account[A-Z]/)) {
+                if (!card.labels.find( e => e === '账户')){
+                  card.labels.push('账户')
+                }
+              }
+              card.code_pre = `
+if (!swtc_lib) { const swtc_lib = require("swtc-lib") } // node.js 环境需要导入库 
+let remote = ${computedRemoteString.value}
+let secret = '${settings.value.walletSecret}'
+let address = '${settings.value.walletAddress}'
+
+remote.connectPromise()
+  .then(async (server_info) => {
+      console.log(server_info)
+      // 试验场所
+`
+              if (card.returns === 'request') {
+                if (funcCardParam(card) === '{}') {
+                  if (card.labels.find( e => e === '账户')) {
+                    card.code = `
+      let ${card.returns} = remote.${key}(
+        {
+          account: address,
+        }
+      )`
+
+                  } else {
+                    card.code = `
+      let ${card.returns} = remote.${key}(
+        {
+
+        }
+      )`
+                  }
+                } else {
+                  card.code = `
+      let ${card.returns} = remote.${key}()`
+                }
+                card.code +=`
+      let result = await ${card.returns}.submitPromise()
+`
+              } else if (card.returns === 'tx') {
+                if (funcCardParam(card) === '{}') {
+                  if (card.labels.find( e => e === '账户')) {
+                    card.code = `
+      let ${card.returns} = remote.${key}(
+        {
+          account: address,
+        }
+      )`
+
+                  } else {
+                    card.code = `
+      let ${card.returns} = remote.${key}(
+        {
+
+        }
+      )`
+                  }
+                } else {
+                  card.code = `
+      let ${card.returns} = remote.${key}()`
+                }
+                card.code +=`
+      let result = await ${card.returns}.submitPromise(secret)
+`
+              } else {
+                card.code = `
+      let result = remote.${key}()
+`
+              }
+              card.code += `
+      console.dir(result)
+      // alert(JSON.stringify(result, '', 2))
+`
+              card.code_post = `
+      // 试验场所
       remote.disconnect()
     })
   .catch((error) => console.error(error))
 `
             })
           }
+        const prepareBlocks = vueFunctionApi.value({
+            title: '区块|井通节点',
+            content: '区块|井通节点',
+            lists: [
+              '区块链数据 - 全账本',
+              '区块链数据 - 部分账本',
+              'websocket - 交互接口',
+              'websocket - 查询写入',
+            ]
+          })
+        const prepareWeb = vueFunctionApi.value('<script src="https://unpkg.com/swtc-lib" />')
+        const prepares = vueFunctionApi.value({
+          swtclib: {
+            key: 'swtc-lib',
+            show: true,
+            labels: ["基础"],
+            title: '包装类 - Remote',
+            content: 'swtc_lib.Remote',
+            lists: [
+              {name: '实例', code: 'remote = new Remote()'},
+              {name: '查询', code: 'request = remote.requestAbc()'},
+              {name: '写入', code: 'tx = remote.buildXyzTx()'}
+            ],
+          },
+          request: {
+            key: 'request',
+            show: false,
+            labels: ["辅助"],
+            title: '包装类 - Request [查询]',
+            content: 'swtc_lib.Request',
+            lists: [
+              {name: '实例', code: 'request = new Request()'},
+              {name: '提交', code: 'request.submitPromise()'},
+            ]
+          },
+          tx: {
+            key: 'tx',
+            show: false,
+            labels: ["辅助"],
+            title: '包装类 - Transaction [写入]',
+            content: 'swtc_lib.Transaction',
+            dicts: {},
+            lists: [
+              {name: '实例', code: 'tx = new Transaction()'},
+              {name: '签名', code: 'tx.signPromise(secret )'},
+              {name: '提交', code: 'tx.submitPromise(secret)'},
+            ]
+          },
+          wallet: {
+            key: 'wallet',
+            show: false,
+            labels: ["基础"],
+            title: '包装类 - Wallet [账户]',
+            content: 'swtc_lib.Wallet',
+            dicts: {},
+            lists: [
+              {name: '实例', code: 'wallet = new Wallet(secret)'},
+              {name: '静态', code: 'w1 = Wallet.generate()'},
+              {name: '静态', code: 'w2 = Wallet.fromSecret(secret)'},
+            ]
+          },
+          unique: {
+            key: 'unique',
+            show: false,
+            labels: ["独有"],
+            title: '独有',
+            content: '',
+            dicts: {},
+            lists: [
+              {name: '支持', code:'typescript'},
+              {name: '支持', code: 'Promise'},
+              {name: '独有', code: 'remote.connectPromise()'},
+              {name: '独有', code: 'request.submitPromise()'},
+              {name: '独有', code: 'tx.signPromise()'},
+              {name: '独有', code: 'tx.submitPromise()'},
+            ]
+          },
+          supplement: {
+            key: 'supplement',
+            show: false,
+            labels: ["辅助"],
+            title: '辅助',
+            content: '',
+            dicts: {},
+            lists: [
+              {name: '辅助', code: 'remote.makeCurrency()'},
+              {name: '辅助', code: 'remote.makeAmount()'},
+              {name: '辅助', code: 'tx.signPromise()'},
+            ]
+          },
+        })
+        const computedFilteredCards = vueFunctionApi.computed(() => {
+            let filteredSet = new Set()
+            activeLabels.value.forEach(label_index => {
+              let label = labels.value[label_index]
+              computedCardKeys.value.forEach(key => {
+                card = cards.value[key]
+                if (card.labels.indexOf(label) !== -1) {
+                  filteredSet.add(card)
+                }
+              })
+            })
+            let filtered = []
+            filteredSet.forEach(card => filtered.push(card))
+            return filtered
+          })
         const cards = vueFunctionApi.value({
-          prepare: {
-            title: '预备工作',
-            content: '为学习准备工作',
-            code: '',
-            raised: false,
-          },
-          requestServerInfo: {
-            title: '查询服务器信息',
-            content: '查询服务器信息',
-            code: '',
-            raised: false
-          },
-          requestLedgerClosed: {
-            title: '查询最新关闭的区块',
-            content: '查询最新关闭的区块',
-            code: '',
-            raised: false
-          },
           requestLedger: {
+            key: 'requestLedger',
+            interface: '',
             title: '查询区块',
             content: '查询区块',
+            code_pre: '',
+            code_post: '',
             code: '',
-            raised: false
-          },
-          requestTx: {
-            title: '查询交易信息',
-            content: '查询交易信息',
-            code: '',
-            raised: false
-          },
-          requestPeers: {
-            title: '查询对接服务器',
-            content: '查询对接服务器',
-            code: '',
-            raised: false
-          },
-          requestPathFind: {
-            title: '查询路径撮合',
-            content: '查询路径撮合',
-            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: [],
             raised: false
           },
           requestAccountInfo: {
+            key: 'requestAccountInfo',
+            interface: '',
             title: '查询账户信息',
             content: '查询账户信息',
+            code_pre: '',
+            code_post: '',
             code: '',
-            raised: false
-          },
-          requestAccountOffers: {
-            title: '查询账户挂单',
-            content: '查询账户挂单',
-            code: '',
-            raised: false
-          },
-          requestAccountTx: {
-            title: '查询账户记录',
-            content: '查询账户记录',
-            code: '',
-            raised: false
-          },
-          requestOrderBook: {
-            title: '查询挂单列表',
-            content: '查询挂单列表',
-            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: ["常用"],
             raised: false
           },
           requestAccountTums: {
-            title: '查询账户通证',
-            content: '查询账户通证',
+            key: 'requestAccountTums',
+            interface: '',
+            title: '查询可发送接收的通证',
+            content: '查询可发送接收的通证',
+            code_pre: '',
+            code_post: '',
             code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: ["常用"],
             raised: false
           },
-          requestAccountOffers: {
-            title: '查询账户关系',
-            content: '查询账户关系',
+          requestTx: {
+            key: 'requestTx',
+            interface: '',
+            title: '查询某一交易信息',
+            content: '查询某一交易信息',
+            code_pre: '',
+            code_post: '',
             code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: ["常用"],
             raised: false
           },
-          buildAccountSetTx: {
-            title: '创建账户关系交易',
-            content: '创建账户关系交易',
+          requestAccountTx: {
+            key: 'requestAccountTx',
+            interface: '',
+            title: '查询账户交易记录',
+            content: '查询账户交易记录',
+            code_pre: '',
+            code_post: '',
             code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: ["常用"],
             raised: false
           },
-          buildBrokerageTx: {
-            title: '创建代理商交易',
-            content: '创建代理商交易',
+          requestAccountRelations: {
+            key: 'requestAccountRelations',
+            interface: '',
+            title: '查询账户关系和通证',
+            content: '查询账户关系和通证',
+            code_pre: '',
+            code_post: '',
             code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: ["常用"],
             raised: false
           },
-          buildContractCallTx: {
-            title: '创建执行LUA合约交易',
-            content: '创建执行LUA合约交易',
+          requestAccounts: {
+            key: 'requestAccounts',
+            interface: '',
+            title: '查询开户数量',
+            content: '查询开户数量',
+            code_pre: '',
+            code_post: '',
             code: '',
-            raised: false
-          },
-          buildContractDeployTx: {
-            title: '创建部署LUA合约交易',
-            content: '创建部署LUA合约交易',
-            code: '',
-            raised: false
-          },
-          buildContractInitTx: {
-            title: '创建部署SOLIDITY合约交易',
-            content: '创建部署SOLIDITY合约交易',
-            code: '',
-            raised: false
-          },
-          buildContractInvokeTx: {
-            title: '创建执行SOLIDITY合约交易',
-            content: '创建执行SOLIDITY合约交易',
-            code: '',
-            raised: false
-          },
-          buildOfferCancelTx: {
-            title: '创建取消挂单交易',
-            content: '创建取消挂单交易',
-            code: '',
-            raised: false
-          },
-          buildOfferCreateTx: {
-            title: '创建提交挂单交易',
-            content: '创建提交挂单交易',
-            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: ["辅助"],
             raised: false
           },
           buildPaymentTx: {
+            key: 'buildPaymentTx',
+            interface: '',
             title: '创建支付交易',
             content: '创建支付交易',
+            code_pre: '',
+            code_post: '',
             code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: [""],
+            raised: false
+          },
+          requestOrderBook: {
+            key: 'requestOrderBook',
+            interface: '',
+            title: '查询挂单列表',
+            content: '查询挂单列表',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: [],
+            raised: false
+          },
+          requestAccountOffers: {
+            key: 'requestAccountOffers',
+            interface: '',
+            title: '查询账户挂单',
+            content: '查询账户挂单',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: [],
+            raised: false
+          },
+          buildAccountSetTx: {
+            key: 'buildAccountSetTx',
+            interface: '',
+            title: '创建账户关系交易',
+            content: '创建账户关系交易',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: [],
+            raised: false
+          },
+          buildBrokerageTx: {
+            key: 'buildBrokerageTx',
+            interface: '',
+            title: '创建代理商交易',
+            content: '创建代理商交易',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: ["进阶"],
+            raised: false
+          },
+          buildContractCallTx: {
+            key: 'buildContractCallTx',
+            interface: '',
+            title: '创建执行LUA合约交易',
+            content: '创建执行LUA合约交易',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: [],
+            raised: false
+          },
+          buildContractDeployTx: {
+            key: 'buildContractDeployTx',
+            interface: '',
+            title: '创建部署LUA合约交易',
+            content: '创建部署LUA合约交易',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: [],
+            raised: false
+          },
+          buildContractInitTx: {
+            key: 'buildContractInitTx',
+            interface: '',
+            title: '创建部署SOLIDITY合约交易',
+            content: '创建部署SOLIDITY合约交易',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: [],
+            raised: false
+          },
+          buildContractInvokeTx: {
+            key: 'buildContractInvokeTx',
+            interface: '',
+            title: '创建执行SOLIDITY合约交易',
+            content: '创建执行SOLIDITY合约交易',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: [],
+            raised: false
+          },
+          buildOfferCancelTx: {
+            key: 'buildOfferCancelTx',
+            interface: '',
+            title: '创建取消挂单交易',
+            content: '创建取消挂单交易',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: [],
+            raised: false
+          },
+          buildOfferCreateTx: {
+            key: 'buildOfferCreateTx',
+            interface: '',
+            title: '创建提交挂单交易',
+            content: '创建提交挂单交易',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: [],
             raised: false
           },
           buildRelationTx: {
+            key: 'buildRelationTx',
+            interface: '',
             title: '创建关系交易',
             content: '创建关系交易',
+            code_pre: '',
+            code_post: '',
             code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: ["进阶"],
+            raised: false
+          },
+          // _setSequecePromise: {
+          //   key: 'setSequencePromise',
+          //   title: '设置交易序号',
+          //   content: '设置交易序号',
+          //   code_pre: '',
+          //   code_post: '',
+          //   code: '',
+          //   params: '[sequence]',
+          //   showParams: false,
+          //   returns: 'tx',
+          //   labels: ["辅助"],
+          //   raised: false
+          // },
+          makeCurrency: {
+            key: 'makeCurrency',
+            title: '生成通证',
+            content: '生成通证',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: '[currency[, issuer]]',
+            showParams: false,
+            returns: 'currency',
+            labels: ["辅助"],
+            raised: false
+          },
+          makeAmount: {
+            key: 'makeAmount',
+            title: '生成通证数量',
+            content: '生成通证数量',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: '[value[, currency[, issuer]]]',
+            showParams: false,
+            returns: 'amount',
+            labels: ["辅助"],
             raised: false
           },
           buildSignTx: {
+            key: 'buildSignTx',
+            interface: '',
             title: '创建签名交易',
             content: '创建签名交易',
+            code_pre: '',
+            code_post: '',
             code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'tx',
+            labels: ["未知"],
             raised: false
-          }
+          },
+          connectPromise: {
+            key: 'connectPromise',
+            interface: '',
+            title: '连接服务器',
+            content: '连接服务器',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: '',
+            showParams: false,
+            returns: '',
+            labels: ['基础'],
+            raised: false
+          },
+          disconnect: {
+            key: 'disconnect',
+            interface: '',
+            title: '断开服务器',
+            content: '断开服务器',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: '',
+            showParams: false,
+            returns: '',
+            labels: ['基础'],
+            raised: false
+          },
+          requestServerInfo: {
+            key: 'requestServerInfo',
+            interface: '',
+            title: '查询服务器信息',
+            content: '查询服务器信息',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: '',
+            showParams: false,
+            returns: 'request',
+            labels: ['基础'],
+            raised: false
+          },
+          requestLedgerClosed: {
+            key: 'requestLedgerClosed',
+            interface: '',
+            title: '查询最新关闭的区块',
+            content: '查询最新关闭的区块',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: '',
+            showParams: false,
+            returns: 'request',
+            labels: ['基础'],
+            raised: false
+          },
+          requestPathFind: {
+            key: 'requestPathFind',
+            interface: '',
+            title: '查询路径撮合',
+            content: '查询路径撮合',
+            code_pre: '',
+            code_post: '',
+            code: '',
+            params: 'object',
+            showParams: false,
+            returns: 'request',
+            labels: ["进阶"],
+            raised: false
+          },
         })
-        const model = vueFunctionApi.value('tab-2')
-        const text = vueFunctionApi.value('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.')
         return {
-          model,
-          text,
-          dialog,
-          walletSecret,
-          walletAddress,
-          accountInfo,
-          accountTabs,
-          cardHeight,
-          testChain,
-          libServer,
-          apiServer,
+          settings,
           labels,
-          activeLabel,
-          links,
+          activeLabels,
+          wallets,
+          browsers,
           interval,
-          evalString,
           ledger,
           started,
+          codeReadonly,
           blocks,
-          maxBlocks,
-          updateInterval,
-          toolbarTitle,
+          dashboardBlocks,
+          computedFilteredCards,
           cards,
+          prepareBlocks,
+          prepareWeb,
+          prepares,
+          reosurceLinks,
+          computedPrepareKeys,
           computedCardKeys,
           computedRemoteOption,
           computedApiRemoteOption,
           computedRemote,
+          computedRemoteString,
           computedApiRemote,
+          funcPrepareRaise,
           funcCardRaise,
-          funcMarked,
+          funcCardParam,
+          funcInitBlocks,
           funcInitCards,
+          funcCopy,
           funcEval,
           funcSetInterval,
           funcClearInterval,
-          funcUpdateAccountInfo
+          funcUpdateAccountInfo,
+          funcOpenUrl,
+          funcCardParamInterface
         }
       }
     })
