@@ -245,6 +245,44 @@
       {name: 'swtclib实例', url: 'http://swtc.daszichan.com/docs/examples'},
       {name: 'javascript教程', url: 'https://www.liaoxuefeng.com/wiki/1022910821149312'}
     ]
+    const prepareBlocks = {
+        title: '区块|井通节点',
+        content: '区块|井通节点',
+        lists: [
+          '区块链数据 - 全账本',
+          '区块链数据 - 部分账本',
+          'websocket - 交互接口',
+          'websocket - 查询写入',
+        ]
+      }
+    const prepareWeb = '<script src="https://unpkg.com/swtc-lib" />'
+    const funcOpenUrl = (url) => {
+      window.open(url, '_blank')
+    }
+
+    const funcCopy = (string) => {
+      navigator.permissions.query({name: "clipboard-write"}).then(result => {
+         if (result.state == "granted" || result.state == "prompt") {
+           /* write to the clipboard now */
+           navigator.clipboard.writeText(string).then(function() {
+              alert("代码已复制")
+            }, function() {
+              alert("代码未能复制")
+            });
+         }
+      })
+    }
+    const funcEval = (string) => {
+      string_code = `try {
+${string}
+} catch (error) {
+  console.log(error)
+  alert('运行出错了，修改检查')
+}
+`
+      eval(string_code)
+    }
+
     const ModalSettings = vueCompositionApi.createComponent({
       props: [ 'settings' ],
       components: { PrismComponent },
@@ -381,6 +419,7 @@
         const started = vueCompositionApi.ref(false)
         const codeReadonly = vueCompositionApi.ref(true)
         const interval = vueCompositionApi.ref(null)
+        const activeLabels = vueCompositionApi.ref([0])
         const settings = vueCompositionApi.reactive({
             dialog: false,
             toolbarTitle: 'SWTCLIB 教程',
@@ -395,7 +434,6 @@
             apiServer: localStorage.apiServer || 'https://tapi.jingtum.com',
             testIssuer:localStorage.testIssuer || 'jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS',
           })
-        const activeLabels = vueCompositionApi.ref([0])
         const wallets = vueCompositionApi.reactive({
             accountInfo: {balances: {loading: true}, payments: {loading: true}, orders: {loading: true}, txs: {loading: true}},
             accountTabs: 'balances',
@@ -403,31 +441,9 @@
             name: '账户',
             dialog: false
           })
-        const browsers = vueCompositionApi.ref({id: 'browser', name: '浏览器', dialog: false})
-        const blocks = vueCompositionApi.ref([])
-        const dashboardBlocks = vueCompositionApi.ref([])
-        const funcCopy = (string) => {
-          navigator.permissions.query({name: "clipboard-write"}).then(result => {
-             if (result.state == "granted" || result.state == "prompt") {
-               /* write to the clipboard now */
-               navigator.clipboard.writeText(string).then(function() {
-                  alert("代码已复制")
-                }, function() {
-                  alert("代码未能复制")
-                });
-             }
-          })
-        }
-        const funcEval = (string) => {
-          string = `try {
-${string}
-} catch (error) {
-  console.log(error)
-  alert('运行出错了，修改检查')
-}
-`
-          eval(string)
-        }
+        const browsers = vueCompositionApi.reactive({id: 'browser', name: '浏览器', dialog: false})
+        const blocks = vueCompositionApi.reactive([])
+        const dashboardBlocks = vueCompositionApi.reactive([])
         const funcSetInterval = () => {
             let remote = computedApiRemote.value
             console.log(remote.config())
@@ -437,11 +453,11 @@ ${string}
                     let block = await remote.getLedger(ledger.value + 1)
                     if (block.closed) {
                       ledger.value = ledger.value + 1
-                      if (!blocks.value.find(e => e.id === block.ledger_index)) {
-                        blocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
-                        dashboardBlocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
-                        blocks.value.splice(settings.maxBlocks)
-                        dashboardBlocks.value.splice(3)
+                      if (!blocks.find(e => e.id === block.ledger_index)) {
+                        blocks.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
+                        dashboardBlocks.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
+                        blocks.splice(settings.maxBlocks)
+                        dashboardBlocks.splice(3)
                       }
                     } else {
                       console.log(`...ledger ${ledger.value + 1} not closed yet`)
@@ -598,8 +614,8 @@ ${string}
           })
         const funcInitBlocks = async () => {
           try {
-            blocks.value.splice(0)
-            dashboardBlocks.value.splice(0)
+            blocks.splice(0)
+            dashboardBlocks.splice(0)
             let remote = computedApiRemote.value
             let block = await remote.getLedger()
             ledger.value = block.ledger_index
@@ -607,14 +623,11 @@ ${string}
             //console.log('block explorer initiated')
             block = await remote.getLedger(ledger.value)
             
-            blocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: true, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
-            dashboardBlocks.value.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
+            blocks.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: true, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
+            dashboardBlocks.unshift({id: block.ledger_index, name: block.ledger_hash, blockDetail: false, transactions: block.transactions.map( (e,i) => ({id: i, name: e})), block})
           } catch (error) {
             console.log(error)
           }
-        }
-        const funcOpenUrl = (url) => {
-          window.open(url, '_blank')
         }
         const funcInitCardsCodes = () => {
             computedCardKeys.value.forEach((key) => {
@@ -739,17 +752,6 @@ remote.connectPromise()
 `
             })
           }
-        const prepareBlocks = vueCompositionApi.ref({
-            title: '区块|井通节点',
-            content: '区块|井通节点',
-            lists: [
-              '区块链数据 - 全账本',
-              '区块链数据 - 部分账本',
-              'websocket - 交互接口',
-              'websocket - 查询写入',
-            ]
-          })
-        const prepareWeb = vueCompositionApi.ref('<script src="https://unpkg.com/swtc-lib" />')
         const prepares = vueCompositionApi.ref({
           swtclib: {
             key: 'swtc-lib',
