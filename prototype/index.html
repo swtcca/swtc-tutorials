@@ -834,7 +834,7 @@ remote.connectPromise()
           supplement: {
             key: 'supplement',
             show: false,
-            labels: ["辅助"],
+            labels: ["辅助", "多签"],
             title: '辅助',
             content: '',
             dicts: {},
@@ -842,8 +842,8 @@ remote.connectPromise()
               {name: '辅助', code: 'remote.makeCurrency()'},
               {name: '辅助', code: 'remote.makeAmount()'},
               {name: '辅助', code: 'tx.signPromise()'},
-              {name: '辅助', code: 'tx.multiSigning()'},
-              {name: '辅助', code: 'tx.multiSigned()'},
+              {name: '多签', code: 'tx.multiSigning()'},
+              {name: '多签', code: 'tx.multiSigned()'},
             ]
           },
         })
