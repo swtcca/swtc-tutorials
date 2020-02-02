@@ -226,7 +226,7 @@
   <script src="https://unpkg.com/@vue/composition-api/dist/vue-composition-api.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
   <script src="https://unpkg.com/vue-prism-component@1.1.1/dist/vue-prism-component.js"></script>
-  <script src="https://unpkg.com/swtc-lib"></script>
+  <script src="https://unpkg.com/@swtc/lib"></script>
   <script src="https://unpkg.com/@swtc/api"></script>
   <!-- <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> -->
   <script>
@@ -306,7 +306,7 @@ ${string}
                   <v-col cols="12" sm="6" md="8" class="pb-4"><v-text-field label="secret" :type="settings.walletSecretEye ? 'text' : 'password'" :append-icon="settings.walletSecretEye? 'mdi-eye' : 'mdi-eye-off'" @click:append="settings.walletSecretEye=!settings.walletSecretEye" v-model="settings.walletSecret"></v-text-field></v-col>
                 </v-row>
                 <v-row>
-                  <v-col cols="12" sm="6" md="4">测试链</v-col>
+                  <v-col cols="12" sm="6" md="4">公链</v-col>
                   <v-col cols="12" sm="6" md="8"  class="pb-4"><v-switch v-model="settings.testChain"></v-switch></v-col>
                   <v-col cols="12" sm="6" md="4">节点服务器</v-col>
                   <v-col cols="12" sm="6" md="8" class="pb-4"><v-text-field label="libServer" v-model="settings.libServer" readonly></v-text-field></v-col>
@@ -433,9 +433,9 @@ ${string}
             updateInterval: 10,
             maxBlocks: 10,
             cardHeight: localStorage.cardHeight || 270,
-            libServer: localStorage.libServer || 'ws://ts5.jingtum.com:5030',
-            apiServer: localStorage.apiServer || 'https://tapi.jingtum.com',
-            testIssuer:localStorage.testIssuer || 'jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS',
+            libServer: localStorage.libServer || 'wss://s.jingtum.com:5020',
+            apiServer: localStorage.apiServer || 'https://api.jingtum.com',
+            testIssuer:localStorage.testIssuer || 'jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or',
           })
         const wallets = vueCompositionApi.reactive({
             accountInfo: {balances: {loading: true}, payments: {loading: true}, orders: {loading: true}, txs: {loading: true}},
@@ -538,8 +538,8 @@ ${string}
         vueCompositionApi.watch(() => settings.testChain, async (value, oldValue) => {
             console.log(`detected change from ${oldValue} to ${value}` )
             if (value) {
-              settings.libServer = 'ws://ts5.jingtum.com:5030'
-              settings.apiServer = 'https://tapi.jingtum.com'
+              settings.libServer = 'wss://s.jingtum.com:5020'
+              settings.apiServer = 'https://api.jingtum.com'
             } else {
               settings.libServer = ''
               settings.apiServer = ''
@@ -577,15 +577,15 @@ ${string}
             funcSetInterval()
           })
         const computedRemoteOption = vueCompositionApi.computed(() => {
-            return settings.testChain ? {server: 'ws://ts5.jingtum.com:5030', issuer: `'${settings.testIssuer}'`} : {}
+            return settings.testChain ? {server: 'wss://s.jingtum.com:5020', issuer: `'${settings.testIssuer}'`} : {}
           })
         const computedApiRemoteOption = vueCompositionApi.computed(() => {
-            return settings.testChain ? {server: 'https://tapi.jingtum.com', issuer: `'${settings.testIssuer}'`} : {}
+            return settings.testChain ? {server: 'https://api.jingtum.com', issuer: `'${settings.testIssuer}'`} : {}
           })
         const computedRemoteString = vueCompositionApi.computed(() => {
             let r
             if (settings.testChain) {
-              r = `new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5030', issuer: '${settings.testIssuer}'})`
+              r = `new (swtc_lib.Remote)({server: 'wss://s.jingtum.com:5020', issuer: '${settings.testIssuer}'})`
             } else if (settings.libServer) {
               r = `new (swtc_lib.Remote)({server: ${settings.libServer}})`
             } else {
@@ -596,7 +596,7 @@ ${string}
         const computedRemote = vueCompositionApi.computed(() => {
             let r
             if (settings.testChain) {
-              r = new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5030', issuer: `'${settings.testIssuer}'`})
+              r = new (swtc_lib.Remote)({server: 'wss://s.jingtum.com:5020', issuer: `'${settings.testIssuer}'`})
             } else if (settings.libServer) {
               r = new (swtc_lib.Remote)({server: settings.libServer})
             } else {
@@ -607,7 +607,7 @@ ${string}
         const computedApiRemote = vueCompositionApi.computed(() => {
             let r
             if (settings.testChain) {
-              r = new (swtc_api.Remote)({server: 'https://tapi.jingtum.com', issuer: `'${settings.testIssuer}'`})
+              r = new (swtc_api.Remote)({server: 'https://api.jingtum.com', issuer: `'${settings.testIssuer}'`})
             } else if (settings.apiServer) {
               r = new (swtc_api.Remote)({server: `'${settings.apiServer}'`})
             } else {
