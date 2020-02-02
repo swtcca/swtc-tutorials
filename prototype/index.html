@@ -538,8 +538,8 @@ ${string}
         vueCompositionApi.watch(() => settings.testChain, async (value, oldValue) => {
             console.log(`detected change from ${oldValue} to ${value}` )
             if (value) {
-              settings.libServer = 'ws://ts5.jingtum.com:5020'
-              settings.apiServer = 'https://tapi.jingtum.com'
+              settings.libServer = 'ws://ts5.jingtum.com:5030'
+              settings.apiServer = 'http://swtcproxy.swtclib.ca:5081'
             } else {
               settings.libServer = ''
               settings.apiServer = ''
@@ -577,15 +577,15 @@ ${string}
             funcSetInterval()
           })
         const computedRemoteOption = vueCompositionApi.computed(() => {
-            return settings.testChain ? {server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.testIssuer}'`} : {}
+            return settings.testChain ? {server: 'ws://ts5.jingtum.com:5030', issuer: `'${settings.testIssuer}'`} : {}
           })
         const computedApiRemoteOption = vueCompositionApi.computed(() => {
-            return settings.testChain ? {server: 'https://tapi.jingtum.com', issuer: `'${settings.testIssuer}'`} : {}
+            return settings.testChain ? {server: 'http://swtcproxy.swtclib.ca:5081', issuer: `'${settings.testIssuer}'`} : {}
           })
         const computedRemoteString = vueCompositionApi.computed(() => {
             let r
             if (settings.testChain) {
-              r = `new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: '${settings.testIssuer}'})`
+              r = `new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5030', issuer: '${settings.testIssuer}'})`
             } else if (settings.libServer) {
               r = `new (swtc_lib.Remote)({server: ${settings.libServer}})`
             } else {
@@ -596,7 +596,7 @@ ${string}
         const computedRemote = vueCompositionApi.computed(() => {
             let r
             if (settings.testChain) {
-              r = new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5020', issuer: `'${settings.testIssuer}'`})
+              r = new (swtc_lib.Remote)({server: 'ws://ts5.jingtum.com:5030', issuer: `'${settings.testIssuer}'`})
             } else if (settings.libServer) {
               r = new (swtc_lib.Remote)({server: settings.libServer})
             } else {
@@ -607,7 +607,7 @@ ${string}
         const computedApiRemote = vueCompositionApi.computed(() => {
             let r
             if (settings.testChain) {
-              r = new (swtc_api.Remote)({server: 'https://tapi.jingtum.com', issuer: `'${settings.testIssuer}'`})
+              r = new (swtc_api.Remote)({server: 'http://swtcproxy.swtclib.ca:5081', issuer: `'${settings.testIssuer}'`})
             } else if (settings.apiServer) {
               r = new (swtc_api.Remote)({server: `'${settings.apiServer}'`})
             } else {
