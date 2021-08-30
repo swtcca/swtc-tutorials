@@ -433,8 +433,8 @@ ${string}
             updateInterval: 10,
             maxBlocks: 10,
             cardHeight: localStorage.cardHeight || 270,
-            libServer: localStorage.libServer || 'wss://s.jingtum.com:5020',
-            apiServer: localStorage.apiServer || 'https://api.jingtum.com',
+            libServer: localStorage.libServer || 'ws://ws.bcapps.ca:5020',
+            apiServer: localStorage.apiServer || 'http://bcapps.ca:5080',
             testIssuer:localStorage.testIssuer || 'jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or',
           })
         const wallets = VueCompositionAPI.reactive({
@@ -538,8 +538,8 @@ ${string}
         VueCompositionAPI.watch(() => settings.testChain, async (value, oldValue) => {
             console.log(`detected change from ${oldValue} to ${value}` )
             if (value) {
-              settings.libServer = 'wss://s.jingtum.com:5020'
-              settings.apiServer = 'https://api.jingtum.com'
+              settings.libServer = 'ws://ws.bcapps.ca:5020'
+              settings.apiServer = 'http://bcapps.ca:5080'
             } else {
               settings.libServer = ''
               settings.apiServer = ''
@@ -577,15 +577,15 @@ ${string}
             funcSetInterval()
           })
         const computedRemoteOption = VueCompositionAPI.computed(() => {
-            return settings.testChain ? {server: 'wss://s.jingtum.com:5020', issuer: `'${settings.testIssuer}'`} : {}
+            return settings.testChain ? {server: 'ws://ws.bcapps.ca:5020', issuer: `'${settings.testIssuer}'`} : {}
           })
         const computedApiRemoteOption = VueCompositionAPI.computed(() => {
-            return settings.testChain ? {server: 'https://api.jingtum.com', issuer: `'${settings.testIssuer}'`} : {}
+            return settings.testChain ? {server: 'http://bcapps.ca:5080', issuer: `'${settings.testIssuer}'`} : {}
           })
         const computedRemoteString = VueCompositionAPI.computed(() => {
             let r
             if (settings.testChain) {
-              r = `new (swtc_lib.Remote)({server: 'wss://s.jingtum.com:5020', issuer: '${settings.testIssuer}'})`
+              r = `new (swtc_lib.Remote)({server: 'ws://ws.bcapps.ca:5020', issuer: '${settings.testIssuer}'})`
             } else if (settings.libServer) {
               r = `new (swtc_lib.Remote)({server: ${settings.libServer}})`
             } else {
@@ -596,7 +596,7 @@ ${string}
         const computedRemote = VueCompositionAPI.computed(() => {
             let r
             if (settings.testChain) {
-              r = new (swtc_lib.Remote)({server: 'wss://s.jingtum.com:5020', issuer: `'${settings.testIssuer}'`})
+              r = new (swtc_lib.Remote)({server: 'ws://ws.bcapps.ca:5020', issuer: `'${settings.testIssuer}'`})
             } else if (settings.libServer) {
               r = new (swtc_lib.Remote)({server: settings.libServer})
             } else {
@@ -607,7 +607,7 @@ ${string}
         const computedApiRemote = VueCompositionAPI.computed(() => {
             let r
             if (settings.testChain) {
-              r = new (swtc_api.Remote)({server: 'https://api.jingtum.com', issuer: `'${settings.testIssuer}'`})
+              r = new (swtc_api.Remote)({server: 'http://bcapps.ca:5080', issuer: `'${settings.testIssuer}'`})
             } else if (settings.apiServer) {
               r = new (swtc_api.Remote)({server: `'${settings.apiServer}'`})
             } else {
